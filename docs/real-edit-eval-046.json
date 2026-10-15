@@ -1,0 +1,54 @@
+{
+  "version": "0.4.6",
+  "model": "gemma-4-26B.gguf",
+  "context_tokens": 49152,
+  "fixture": "copy of existing 539-line script.js",
+  "production_files_modified": false,
+  "cases": [
+    {
+      "temperature": 1.0,
+      "automatic_recheck": false,
+      "writes": 5,
+      "tool_calls": 31,
+      "tool_errors": 9,
+      "syntax_ok": false,
+      "workspace": "/tmp/arli-large-edit-Ep5bMG/workspace"
+    },
+    {
+      "temperature": 0.2,
+      "seed": 42,
+      "automatic_recheck": true,
+      "writes": 6,
+      "tool_calls": 21,
+      "tool_errors": 8,
+      "syntax_ok": false,
+      "workspace": "/tmp/arli-large-edit-JlI1hK/workspace"
+    }
+  ],
+  "conclusion": "Editing transport works; complex source repair remains unreliable. Low temperature was not adopted. Protocol leakage guard added after the second case.",
+  "service_diagnostic": {
+    "version": "0.4.6",
+    "installed_rpm": "0.4.4",
+    "runtime": "temporary hotfix daemon/agent",
+    "actual_service_edit": true,
+    "production_files_preserved": true,
+    "client_exit": 0
+  },
+  "small_web_fixture": {
+    "passed": 3,
+    "total": 3,
+    "writes_per_case": 2,
+    "runtime_ok": true,
+    "public_apis_preserved": true,
+    "tool_calls": [
+      8,
+      9,
+      8
+    ],
+    "failed_tool_observations": [
+      2,
+      1,
+      2
+    ]
+  }
+}

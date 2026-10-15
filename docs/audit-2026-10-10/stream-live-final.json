@@ -1,0 +1,15 @@
+{
+  "file_content": "ready",
+  "file_count": 1,
+  "first_event_id": 1,
+  "grpc_ok": true,
+  "last_event_id": 16,
+  "model": "/models/gemma-4-26B.gguf",
+  "model_endpoint": "http://127.0.0.1:8080/v1",
+  "ordered_without_duplicates": true,
+  "passed": true,
+  "resumed_events": 15,
+  "task_id": 1,
+  "terminal_status": "done",
+  "workspace": "/tmp/arli-live-resume-cpAhA0/workspace"
+}

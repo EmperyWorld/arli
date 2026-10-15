@@ -1,0 +1,67 @@
+{
+  "cases": [
+    {
+      "compactions": 0,
+      "disk_correct": true,
+      "errors": 0,
+      "name": "bugfix",
+      "no_extra_files": true,
+      "passed": true,
+      "seconds": 10,
+      "tool_errors": 0,
+      "tools": 4,
+      "writes": 1
+    },
+    {
+      "compactions": 0,
+      "disk_correct": true,
+      "errors": 0,
+      "name": "multi_file",
+      "no_extra_files": true,
+      "passed": true,
+      "seconds": 15,
+      "tool_errors": 1,
+      "tools": 9,
+      "writes": 2
+    },
+    {
+      "compactions": 0,
+      "disk_correct": true,
+      "errors": 0,
+      "name": "recovery",
+      "no_extra_files": true,
+      "passed": true,
+      "seconds": 14,
+      "tool_errors": 1,
+      "tools": 4,
+      "writes": 1
+    },
+    {
+      "compactions": 3,
+      "disk_correct": false,
+      "errors": 0,
+      "name": "long_turn",
+      "no_extra_files": true,
+      "passed": false,
+      "seconds": 44,
+      "tool_errors": 0,
+      "tools": 30,
+      "writes": 15
+    },
+    {
+      "compactions": 0,
+      "disk_correct": true,
+      "errors": 0,
+      "name": "file_integrity",
+      "no_extra_files": true,
+      "passed": true,
+      "seconds": 10,
+      "tool_errors": 0,
+      "tools": 6,
+      "writes": 2
+    }
+  ],
+  "failed": 1,
+  "model": "/models/gemma-4-26B.gguf",
+  "workspace": "/tmp/arli-live-eval-xyVfFg"
+}

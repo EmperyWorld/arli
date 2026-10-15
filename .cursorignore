@@ -1,0 +1,28 @@
+# Модель не читает секреты, локальное состояние и пакеты.
+# Синтаксис как у gitignore. Эти пути выпадают и из индекса.
+# Сборочные деревья остаются доступны: см. .cursorindexingignore.
+
+.env
+.env.*
+*.pem
+*.key
+
+ui_token
+internal_token
+
+*.db
+*.sqlite
+*.sqlite3
+*.sqlite-journal
+*.sqlite-wal
+*.sqlite-shm
+*.log
+audit/
+
+*.rpm
+*.AppImage
+*.appimage
+*.so
+*.so.*
+
+.cursor/scratchpad.md

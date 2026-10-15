@@ -1,0 +1,16 @@
+{
+  "changeset_id": "turn-98aab594a0dd21d49b481e122466b469",
+  "model": "/models/gemma-4-26B.gguf",
+  "model_disk_verified": true,
+  "passed": true,
+  "revert_disk_verified": true,
+  "through_daemon": true,
+  "through_qt_facade": true,
+  "undo_journal_visible": true,
+  "workspace": "/tmp/arli-live-revert-ui-E9VrM5",
+  "workspace_changed_before_revert": true,
+  "sqlite_tasks_done_verified": true,
+  "source_task_turn_binding_verified": true,
+  "workspace_identity_persistence_verified": true,
+  "manifest_workspace_identity_verified": true
+}

@@ -1,0 +1,10 @@
+#pragma once
+
+// Generated from /VERSION by CMake. Do not edit.
+namespace arli {
+
+inline constexpr const char* kVersion = "@ARLI_VERSION@";
+// Slice label derives from version: 0.<minor>.<patch> → M<minor>.<patch>.
+inline constexpr const char* kSlice = "@ARLI_SLICE@";
+
+}  // namespace arli

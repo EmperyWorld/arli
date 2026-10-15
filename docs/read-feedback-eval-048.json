@@ -1,0 +1,19 @@
+{
+  "version": "0.4.8",
+  "model": "gemma-4-26B.gguf",
+  "test": "next action after failure to edit 1-542 having read only 1-400",
+  "trials": 3,
+  "passed": 3,
+  "next_action": "read_file(path=script.js,start_line=401)",
+  "mutations_executed": false,
+  "ci_tests_passed": 17,
+  "limitation": "Tests targeted error recovery, not correctness of a full project rewrite.",
+  "latest_user_turn": {
+    "task_id": 57,
+    "tool_calls": 19,
+    "successful_writes": 2,
+    "failed_tools": 4,
+    "syntax_check_after_turn": "node --check passed",
+    "files_modified_by_diagnostic": false
+  }
+}

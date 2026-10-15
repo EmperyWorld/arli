@@ -1,0 +1,27 @@
+{
+  "cases": [
+    {
+      "compactions": 0,
+      "disk_correct": true,
+      "errors": 0,
+      "name": "file_integrity",
+      "no_extra_files": true,
+      "passed": true,
+      "seconds": 25,
+      "tool_errors": 0,
+      "tools": 6,
+      "verification_plan": "{\"checks\":[{\"end_line\":1501,\"expected\":\"value=new\",\"kind\":\"line_range\",\"path\":\"large.txt\",\"start_line\":1501},{\"end_line\":1,\"expected\":\"ready\",\"kind\":\"file_equals\",\"path\":\"empty.txt\",\"start_line\":1}],\"unverifiable\":\"Ensuring all other bytes in large.txt remained unchanged; verifying that no new files were created; verifying the specific sequence of operations (reading before writing).\"}",
+      "verification_state": "partial",
+      "writes": 2
+    }
+  ],
+  "failed": 0,
+  "model": "/models/gemma-4-26B.gguf",
+  "workspace": "/tmp/arli-live-eval-USV9rW",
+  "protected_backup_verified": true,
+  "backup_original_bytes_verified": [
+    "large.txt",
+    "empty.txt"
+  ],
+  "backup_outside_workspace": true
+}

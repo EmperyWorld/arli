@@ -1,0 +1,21 @@
+{
+  "cases": [
+    {
+      "compactions": 2,
+      "disk_correct": false,
+      "errors": 0,
+      "name": "long_turn",
+      "no_extra_files": true,
+      "passed": false,
+      "seconds": 39,
+      "tool_errors": 0,
+      "tools": 26,
+      "verification_plan": "{\"checks\":[],\"unverifiable\":\"\\\"После КАЖДОЙ правки ... проверь свою строку\\\" (verification logic is internal), \\\"Заверши только когда все 16 строк DONE\\\" (requires checking full file state at the end)\"}",
+      "verification_state": "unverified",
+      "writes": 13
+    }
+  ],
+  "failed": 1,
+  "model": "/models/gemma-4-26B.gguf",
+  "workspace": "/tmp/arli-live-eval-ojGiYC"
+}

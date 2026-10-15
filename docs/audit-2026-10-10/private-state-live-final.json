@@ -1,0 +1,21 @@
+{
+  "cases": [
+    {
+      "compactions": 0,
+      "disk_correct": true,
+      "errors": 0,
+      "name": "file_integrity",
+      "no_extra_files": true,
+      "passed": true,
+      "seconds": 27,
+      "tool_errors": 0,
+      "tools": 6,
+      "verification_plan": "{\"checks\":[{\"end_line\":1501,\"expected\":\"value=new\",\"kind\":\"line_range\",\"path\":\"large.txt\",\"start_line\":1501},{\"end_line\":1,\"expected\":\"ready\",\"kind\":\"file_equals\",\"path\":\"empty.txt\",\"start_line\":1}],\"unverifiable\":\"Verification that all other bytes in large.txt remain unchanged and that empty.txt was indeed empty before the append operation.\"}",
+      "verification_state": "partial",
+      "writes": 2
+    }
+  ],
+  "failed": 0,
+  "model": "/models/gemma-4-26B.gguf",
+  "workspace": "/tmp/arli-live-eval-ai0hFk"
+}

@@ -1,0 +1,21 @@
+{
+  "after_daemon_restart": true,
+  "approved_exact_fixture": 1,
+  "dialog_id": 1,
+  "done": true,
+  "exit_code": 7,
+  "finished_at": "2026-10-10T16:11:46Z",
+  "grpc_ok": true,
+  "job_status": "exited",
+  "log": "ready",
+  "model": "/models/gemma-4-26B.gguf",
+  "owner_verified": true,
+  "passed": true,
+  "rejected": 0,
+  "starts": 1,
+  "stream_text": "ready",
+  "streamed": true,
+  "task_id": 1,
+  "turn_id": 1,
+  "workspace": "/tmp/arli-live-jobs-DZNx9H/workspace"
+}

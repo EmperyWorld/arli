@@ -1,0 +1,3 @@
+module Arli
+singleton Theme 1.0 Theme.qml
+singleton Voice 1.0 Voice.qml

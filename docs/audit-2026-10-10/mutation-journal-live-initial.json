@@ -1,0 +1,21 @@
+{
+  "cases": [
+    {
+      "compactions": 4,
+      "disk_correct": true,
+      "errors": 1,
+      "name": "file_integrity",
+      "no_extra_files": true,
+      "passed": false,
+      "seconds": 109,
+      "tool_errors": 5,
+      "tools": 23,
+      "verification_plan": "",
+      "verification_state": "",
+      "writes": 2
+    }
+  ],
+  "failed": 1,
+  "model": "/models/gemma-4-26B.gguf",
+  "workspace": "/tmp/arli-live-eval-b9LSEf"
+}

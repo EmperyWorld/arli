@@ -1,0 +1,39 @@
+{
+  "claim_receipt": "accepted",
+  "file_content": "ready",
+  "file_count": 1,
+  "first_event_id": 1,
+  "grpc_ok": true,
+  "interaction_receipt": "",
+  "last_event_id": 19,
+  "model": "/models/gemma-4-26B.gguf",
+  "model_endpoint": "http://127.0.0.1:8080/v1",
+  "ordered_without_duplicates": true,
+  "passed": true,
+  "prompt": "Создай result.txt с ровно пятью байтами ready, без перевода строки. Затем прочитай его для проверки. Используй файловые инструменты, shell не нужен. Других файлов не создавай.",
+  "provider_usage": true,
+  "questions": 0,
+  "read_verified": true,
+  "reported_prompt_tokens": 3862,
+  "reserved_output_tokens": 4096,
+  "resumed_events": 18,
+  "task_id": 1,
+  "terminal_status": "done",
+  "workspace": "/tmp/arli-live-resume-qHVxOJ/workspace",
+  "workspace_rules": false,
+  "durable_snapshot_verified": true,
+  "durable_actions": [
+    {
+      "ok": true,
+      "path": "result.txt",
+      "tool": "create_file",
+      "turn_id": 1
+    },
+    {
+      "ok": true,
+      "path": "result.txt",
+      "tool": "read_file",
+      "turn_id": 1
+    }
+  ]
+}

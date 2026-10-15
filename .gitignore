@@ -1,0 +1,17 @@
+/build/
+/build-*/
+/out/
+*.user
+*.autosave
+.cache/
+__pycache__/
+*.py[cod]
+compile_commands.json
+.vscode/
+.cursor/scratchpad.md
+*.db
+*.sqlite
+*.log
+.env
+/build-ci/
+arli-cpp-plan.md

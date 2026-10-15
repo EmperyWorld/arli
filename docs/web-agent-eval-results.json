@@ -1,0 +1,42 @@
+{
+  "cases": [
+    {
+      "calls": 10,
+      "errors": 0,
+      "passed": true,
+      "preserved": true,
+      "runtime_ok": true,
+      "seconds": 23,
+      "trial": 0,
+      "writes": 2
+    },
+    {
+      "calls": 11,
+      "errors": 0,
+      "passed": true,
+      "preserved": true,
+      "runtime_ok": true,
+      "seconds": 58,
+      "trial": 1,
+      "writes": 3
+    },
+    {
+      "calls": 10,
+      "errors": 0,
+      "passed": true,
+      "preserved": true,
+      "runtime_ok": true,
+      "seconds": 53,
+      "trial": 2,
+      "writes": 2
+    }
+  ],
+  "failed": 0,
+  "workspace": "/tmp/arli-web-eval-eBLLCK",
+  "model": "/models/gemma-4-26B.gguf",
+  "llama_commit": "d81235049",
+  "seed": 42,
+  "temperature": 1.0,
+  "reasoning_budget_tokens": 2048,
+  "context_tokens": 24576
+}

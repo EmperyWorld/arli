@@ -1,0 +1,38 @@
+{
+  "approvals": 1,
+  "changeset_id": "turn-2fd6433e7a9874fa44edb4ae65e98839",
+  "checked_revision": 1,
+  "command_observed": true,
+  "error": "independent bytes, shell and verification result",
+  "model": "/models/gemma-4-26B.gguf",
+  "passed": false,
+  "plan": {
+    "checks": [
+      {
+        "end_line": 1,
+        "expected": "ready\n",
+        "kind": "file_equals",
+        "path": "result.txt",
+        "start_line": 1
+      },
+      {
+        "end_line": 1,
+        "expected": "",
+        "kind": "read_after_each_write",
+        "path": "result.txt",
+        "start_line": 1
+      },
+      {
+        "end_line": 0,
+        "expected": "sh ./verify.sh",
+        "kind": "command_succeeds",
+        "path": "",
+        "start_line": 0
+      }
+    ],
+    "unverifiable": "The requirement 'Do not create other files' cannot be verified. The requirement 'Do not change verify.sh' can only be verified if its initial state is recorded first."
+  },
+  "through_daemon": true,
+  "verification_state": "partial",
+  "workspace": "/tmp/arli-live-procedure-lhcRra"
+}

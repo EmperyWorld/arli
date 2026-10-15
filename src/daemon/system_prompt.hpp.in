@@ -1,0 +1,7 @@
+#pragma once
+
+namespace arli {
+
+inline constexpr const char kSystemPrompt[] = R"ARLI_SYS(@ARLI_SYSTEM_TEXT@)ARLI_SYS";
+
+}  // namespace arli

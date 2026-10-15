@@ -1,0 +1,12 @@
+{
+  "approved_exact_fixture": 1,
+  "denied": 0,
+  "model": "/models/gemma-4-26B.gguf",
+  "outcome": "done",
+  "passed": true,
+  "rpc_observations": 1,
+  "service_value": "ready",
+  "service_writes": 1,
+  "through_daemon": false,
+  "workspace": "/tmp/arli-live-grpc-tools-f1aS0z"
+}

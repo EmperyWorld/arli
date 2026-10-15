@@ -1,0 +1,39 @@
+{
+  "cases": [
+    {
+      "compactions": 0,
+      "disk_correct": true,
+      "errors": 0,
+      "name": "file_integrity",
+      "no_extra_files": true,
+      "passed": true,
+      "seconds": 29,
+      "tool_errors": 0,
+      "tools": 6,
+      "verification_plan": "{\"checks\":[{\"end_line\":1501,\"expected\":\"value=new\",\"kind\":\"line_range\",\"path\":\"large.txt\",\"start_line\":1501},{\"end_line\":1,\"expected\":\"ready\",\"kind\":\"file_equals\",\"path\":\"empty.txt\",\"start_line\":1}],\"unverifiable\":\"Сохранение всех прочих байт в large.txt (невозможно проверить отсутствие изменений в других частях файла без эталонного значения); Отсутствие создания новых файлов.\"}",
+      "verification_state": "partial",
+      "writes": 2
+    }
+  ],
+  "failed": 0,
+  "model": "/models/gemma-4-26B.gguf",
+  "revert": {
+    "complete": true,
+    "files": [
+      {
+        "error": "",
+        "outcome": "reverted",
+        "path": "empty.txt"
+      },
+      {
+        "error": "",
+        "outcome": "reverted",
+        "path": "large.txt"
+      }
+    ],
+    "journal": "turn-0dbbc0be7459da2028c8dc15e4e997f6",
+    "source": "turn-0d636d32e790d73e32f57eb399a6667d"
+  },
+  "revert_verified": true,
+  "workspace": "/tmp/arli-live-eval-Tey6iG"
+}

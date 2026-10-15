@@ -1,0 +1,43 @@
+{
+  "cases": [
+    {
+      "calls": 11,
+      "errors": 0,
+      "passed": true,
+      "preserved": true,
+      "runtime_ok": true,
+      "seconds": 43,
+      "trial": 0,
+      "writes": 2,
+      "failed_tool_observations": 1
+    },
+    {
+      "calls": 8,
+      "errors": 0,
+      "passed": true,
+      "preserved": true,
+      "runtime_ok": true,
+      "seconds": 55,
+      "trial": 1,
+      "writes": 2,
+      "failed_tool_observations": 2
+    },
+    {
+      "calls": 12,
+      "errors": 0,
+      "passed": true,
+      "preserved": true,
+      "runtime_ok": true,
+      "seconds": 35,
+      "trial": 2,
+      "writes": 2,
+      "failed_tool_observations": 3
+    }
+  ],
+  "failed": 0,
+  "workspace": "/tmp/arli-web-eval-OXtRhI",
+  "version": "0.4.7",
+  "context_tokens": 49152,
+  "temperature": 1.0,
+  "fixture": "29-line JavaScript, three functional bugs, independent API/runtime checks"
+}

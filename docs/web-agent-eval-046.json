@@ -1,0 +1,44 @@
+{
+  "cases": [
+    {
+      "calls": 8,
+      "errors": 0,
+      "passed": true,
+      "preserved": true,
+      "runtime_ok": true,
+      "seconds": 121,
+      "trial": 0,
+      "writes": 2,
+      "failed_tool_observations": 2
+    },
+    {
+      "calls": 9,
+      "errors": 0,
+      "passed": true,
+      "preserved": true,
+      "runtime_ok": true,
+      "seconds": 56,
+      "trial": 1,
+      "writes": 2,
+      "failed_tool_observations": 1
+    },
+    {
+      "calls": 8,
+      "errors": 0,
+      "passed": true,
+      "preserved": true,
+      "runtime_ok": true,
+      "seconds": 32,
+      "trial": 2,
+      "writes": 2,
+      "failed_tool_observations": 2
+    }
+  ],
+  "failed": 0,
+  "workspace": "/tmp/arli-web-eval-hwrwdn",
+  "version": "0.4.6",
+  "model": "gemma-4-26B.gguf",
+  "context_tokens": 49152,
+  "temperature": 1.0,
+  "fixture": "29-line JavaScript with three functional bugs and independently checked public APIs"
+}

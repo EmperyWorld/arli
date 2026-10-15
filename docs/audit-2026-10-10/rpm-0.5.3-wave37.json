@@ -1,0 +1,47 @@
+{
+  "rpm": "/home/owned/arli-dist/wave37/arli-0.5.3-1.fc44.x86_64.rpm",
+  "sha256": "870db60a237e8378ff90902c21a0f9e845e3179962ecb53abef03c361da05aba",
+  "passed": true,
+  "extracted_root": "/tmp/arli-wave37-rpm-check-0w9wedgj",
+  "digests": "/home/owned/arli-dist/wave37/arli-0.5.3-1.fc44.x86_64.rpm: digests OK",
+  "package": [
+    "arli",
+    "0.5.3",
+    "1.fc44",
+    "x86_64"
+  ],
+  "payload_entries": 113,
+  "binary_versions": {
+    "arli-daemon": "arli-daemon 0.5.3",
+    "arli-agent": "arli-agent 0.5.3",
+    "arli-shell": "arli-shell 0.5.3",
+    "arli-probe": "arli-probe 0.5.3"
+  },
+  "packaged_shell_offscreen_started": true,
+  "shell_log": "/tmp/arli-wave37-rpm-check-0w9wedgj/shell-startup.log",
+  "size_bytes": 13658436,
+  "sha256_file": "/home/owned/arli-dist/wave37/arli-0.5.3-1.fc44.x86_64.rpm.sha256",
+  "rpm_build_log": "/tmp/arli-wave37-rpm.log",
+  "rpm_check_tests": 64,
+  "source_archive": "/home/owned/arli-dist/wave37/rpmbuild/SOURCES/arli-0.5.3.tar.gz",
+  "source_sha256": "9812a1428a004a79997fc36a04be88abfc68c1e2e30fbc182478e62a949dc3d0",
+  "source_allowlist_verified": true,
+  "source_members": 487,
+  "packaged_live_report": "rpm-0.5.3-live-final.json",
+  "packaged_live_passed": true,
+  "packaged_live_task_states": [
+    [
+      1,
+      "done"
+    ],
+    [
+      2,
+      "done"
+    ]
+  ],
+  "packaged_live_schema": 15,
+  "compiler_warning_categories": {
+    "-Wmisleading-indentation": 43,
+    "-Wunused-result": 5
+  }
+}

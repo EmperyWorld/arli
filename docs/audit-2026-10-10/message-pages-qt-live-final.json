@@ -1,0 +1,12 @@
+{
+  "changeset_id": "turn-7c8fa2edca8f341f623cd3da43f169dc",
+  "model": "/models/gemma-4-26B.gguf",
+  "model_disk_verified": true,
+  "passed": true,
+  "revert_disk_verified": true,
+  "through_daemon": true,
+  "through_qt_facade": true,
+  "undo_journal_visible": true,
+  "workspace": "/tmp/arli-live-revert-ui-CVHDvG",
+  "workspace_changed_before_revert": true
+}

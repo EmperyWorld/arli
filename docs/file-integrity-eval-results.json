@@ -1,0 +1,68 @@
+{
+  "cases": [
+    {
+      "compactions": 0,
+      "disk_correct": true,
+      "errors": 0,
+      "name": "bugfix",
+      "no_extra_files": true,
+      "passed": true,
+      "seconds": 11,
+      "tool_errors": 0,
+      "tools": 4,
+      "writes": 1
+    },
+    {
+      "compactions": 0,
+      "disk_correct": true,
+      "errors": 0,
+      "name": "multi_file",
+      "no_extra_files": true,
+      "passed": true,
+      "seconds": 13,
+      "tool_errors": 0,
+      "tools": 8,
+      "writes": 2
+    },
+    {
+      "compactions": 0,
+      "disk_correct": true,
+      "errors": 0,
+      "name": "recovery",
+      "no_extra_files": true,
+      "passed": true,
+      "seconds": 12,
+      "tool_errors": 1,
+      "tools": 4,
+      "writes": 1
+    },
+    {
+      "compactions": 17,
+      "disk_correct": true,
+      "errors": 0,
+      "name": "long_turn",
+      "no_extra_files": true,
+      "passed": true,
+      "seconds": 79,
+      "tool_errors": 0,
+      "tools": 33,
+      "writes": 16
+    },
+    {
+      "compactions": 0,
+      "disk_correct": true,
+      "errors": 0,
+      "name": "file_integrity",
+      "no_extra_files": true,
+      "passed": true,
+      "seconds": 36,
+      "tool_errors": 0,
+      "tools": 6,
+      "writes": 2
+    }
+  ],
+  "failed": 0,
+  "model": "/models/gemma-4-26B.gguf",
+  "date": "2026-10-10",
+  "scope": "Local Gemma, isolated temporary workspaces; exact disk-content checks. Not a guarantee for arbitrary tasks."
+}

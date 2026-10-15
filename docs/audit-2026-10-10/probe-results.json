@@ -1,0 +1,29 @@
+{
+  "allowed_python_writes_workspace": true,
+  "answer_without_question_reports_success": true,
+  "background_escapes_workdir_with_default_sandbox_settings": true,
+  "date": "2026-10-10",
+  "failed_verification_terminal": {
+    "error_event": true,
+    "task_status": "done"
+  },
+  "history": {
+    "first": "1",
+    "inserted": 405,
+    "last": "400",
+    "returned": 400
+  },
+  "invalid_confirm_reports_accepted": true,
+  "memory": {
+    "after_remember": 21,
+    "before": 30
+  },
+  "readonly_lexer_allows_python_write": true,
+  "second_daemon_after": {
+    "error": "reconcile_startup",
+    "status": "failed"
+  },
+  "second_daemon_before": "running",
+  "second_daemon_exit": 1,
+  "shell_inherits_token": true
+}

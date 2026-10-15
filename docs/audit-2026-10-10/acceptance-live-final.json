@@ -1,0 +1,21 @@
+{
+  "cases": [
+    {
+      "compactions": 6,
+      "disk_correct": true,
+      "errors": 0,
+      "name": "long_turn",
+      "no_extra_files": true,
+      "passed": true,
+      "seconds": 68,
+      "tool_errors": 0,
+      "tools": 33,
+      "verification_plan": "{\"checks\":[{\"end_line\":16,\"expected\":\"{n} DONE\",\"kind\":\"line_range\",\"path\":\"board.txt\",\"start_line\":1}],\"unverifiable\":\"Procedural requirements: separate edit_file call for each line, calling read_file after each edit to verify, not combining edits, and not skipping lines.\"}",
+      "verification_state": "partial",
+      "writes": 16
+    }
+  ],
+  "failed": 0,
+  "model": "/models/gemma-4-26B.gguf",
+  "workspace": "/tmp/arli-live-eval-waN5G9"
+}

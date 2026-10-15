@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=Arli
+GenericName=Local agent
+Comment=Локальный агент: оркестратор, воркер и оболочка
+Exec=arli
+Icon=arli
+Terminal=false
+Categories=Development;Utility;
+StartupNotify=true

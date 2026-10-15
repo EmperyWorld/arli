@@ -1,0 +1,11 @@
+{
+  "version": "0.4.7",
+  "fixture": "copy of real 363-line style.css",
+  "writes": 1,
+  "tool_calls": 4,
+  "tool_errors": 0,
+  "all_old_properties_preserved": true,
+  "outside_rule_unchanged": true,
+  "new_properties_present": true,
+  "other_project_files_preserved": true
+}

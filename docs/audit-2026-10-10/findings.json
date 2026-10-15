@@ -1,0 +1,598 @@
+[
+  {
+    "id": "A01",
+    "priority": "P1",
+    "area": "Исполнение",
+    "title": "Shell наследует internal_token",
+    "evidence": "Воспроизведено с синтетическим маркером; реальные токены не выводились.",
+    "refs": [
+      [
+        "src/daemon/spawn_agent.cpp",
+        45
+      ],
+      [
+        "src/daemon/tools/shell_run.cpp",
+        58
+      ],
+      [
+        "src/daemon/jobs.cpp",
+        64
+      ]
+    ],
+    "impact": "ARLI_INTERNAL_TOKEN передаётся воркеру, а execv/execl наследуют его окружение. Даже sandboxed printenv получает маркер. Результат команды может затем попасть в модель, UI, steps и лог. Общего удаления секретов из этих потоков нет.",
+    "fix": "Отдельный allowlist env для всех инструментальных процессов; execve с чистым env, закрытие лишних FD, недоступность state. Удаление секретов из результатов до UI/LLM/хранилища как дополнительная защита.",
+    "acceptance": "Маркер отсутствует в env foreground/background, stdout, observation, steps, audit и log; проверять также пути ошибок."
+  },
+  {
+    "id": "A02",
+    "priority": "P1",
+    "area": "Исполнение",
+    "title": "Фоновые команды обходят sandbox",
+    "evidence": "Воспроизведена запись в тестовый файл вне workdir при настройках по умолчанию.",
+    "refs": [
+      [
+        "src/daemon/jobs.cpp",
+        21
+      ],
+      [
+        "src/daemon/jobs.cpp",
+        108
+      ]
+    ],
+    "impact": "start_background запускает /bin/sh напрямую. ShellRunOptions с shell_net, allow_unsandboxed и timeout не применяются, rlimit обычного runner также отсутствует.",
+    "fix": "Единый ProcessRunner для foreground/background: sandbox, env, сеть, лимиты, группы процессов и отмена.",
+    "acceptance": "Одинаковая политика доступа и сети для обоих режимов, включая отсутствие bwrap; выход за workdir запрещён."
+  },
+  {
+    "id": "A03",
+    "priority": "P1",
+    "area": "Исполнение",
+    "title": "read_only не обеспечивает запрет записи",
+    "evidence": "Воспроизведено: лексер разрешает Python-команду, и обычный runner создаёт файл.",
+    "refs": [
+      [
+        "src/daemon/turn.cpp",
+        598
+      ],
+      [
+        "src/daemon/tools/shell_run.cpp",
+        117
+      ],
+      [
+        "src/daemon/tools/registry.cpp",
+        123
+      ]
+    ],
+    "impact": "Python, sh-обёртки и проектные скрипты могут писать без распознаваемых редиректов. Workdir монтируется writable. HTTP POST/DELETE также не классифицируются как изменение.",
+    "fix": "Явные capabilities инструментов и режимов; read-only mount для запрещённых записей; политика сетевых изменений; лексер оставить подсказкой, а не границей безопасности.",
+    "acceptance": "В read_only попытки записи через интерпретатор, build hook, shell wrapper и HTTP mutation отклоняются; чтение работает."
+  },
+  {
+    "id": "A04",
+    "priority": "P1",
+    "area": "Жизненный цикл",
+    "title": "Ошибка хода превращается в done",
+    "evidence": "Воспроизведено через настоящий Agent.Send + mock syntax_stuck: Error «Проверка не прошла», tasks.status=done.",
+    "refs": [
+      [
+        "src/daemon/turn.cpp",
+        765
+      ],
+      [
+        "src/daemon/turn.cpp",
+        834
+      ],
+      [
+        "src/daemon/hub_control.cpp",
+        79
+      ]
+    ],
+    "impact": "Done обозначает конец потока и одновременно трактуется как успех задачи. Аналогично лимиты и некоторые ошибки инструмента могут выглядеть как успешное завершение в ListTasks.",
+    "fix": "Добавить outcome/error_code/retryable к терминальному результату, сохранив существующие поля proto. Явно различать success, failed, cancelled, incomplete, blocked; обработчик завершения один.",
+    "acceptance": "Ошибка LLM, исчерпание шагов, syntax_stuck, отказ пользователя и успешный ход дают согласованные UI/DB/audit/RPC результаты."
+  },
+  {
+    "id": "A05",
+    "priority": "P1",
+    "area": "Жизненный цикл",
+    "title": "Второй демон портит состояние первого",
+    "evidence": "Воспроизведено: второй процесс вышел с кодом 1, но running задача первого стала failed(reconcile_startup).",
+    "refs": [
+      [
+        "src/daemon/server.cpp",
+        93
+      ],
+      [
+        "src/daemon/server.cpp",
+        119
+      ]
+    ],
+    "impact": "Reconcile выполняется до успешного bind и до получения эксклюзивного владения каталогом состояния. Один state может также использоваться демонами на разных портах.",
+    "fix": "Эксклюзивный lock state directory до миграций и reconcile; только владелец изменяет lifecycle. Отказ второго экземпляра должен быть без побочных эффектов.",
+    "acceptance": "Два запуска на одном порту и на разных портах с одним state: второй отклонён, задачи первого не изменены."
+  },
+  {
+    "id": "A06",
+    "priority": "P1",
+    "area": "Контекст",
+    "title": "Длинные диалоги теряют свежую историю",
+    "evidence": "Воспроизведено: из 405 сообщений возвращены 1–400, а не 6–405.",
+    "refs": [
+      [
+        "src/daemon/db_messages.cpp",
+        9
+      ],
+      [
+        "src/daemon/turn.cpp",
+        64
+      ],
+      [
+        "src/daemon/turn.cpp",
+        88
+      ],
+      [
+        "src/daemon/db.hpp",
+        144
+      ]
+    ],
+    "impact": "ORDER BY id ASC LIMIT загружает начало диалога. UI ограничен первыми 200, агент первыми 400. Текущий запрос закреплён в system, но последние ответы и уточнения пропадают.",
+    "fix": "Запрос последних N с последующим восстановлением хронологического порядка; курсорная пагинация UI; стабильный summary между ходами.",
+    "acceptance": "После 500 сообщений UI показывает последние и умеет загрузить старые; агент видит последнее уточнение и правильный предыдущий ответ."
+  },
+  {
+    "id": "A07",
+    "priority": "P1",
+    "area": "Контекст",
+    "title": "Память теряет записи и стабильные ID",
+    "evidence": "Воспроизведено: 30 фактов → remember → 21 факт.",
+    "refs": [
+      [
+        "src/daemon/memory.cpp",
+        106
+      ],
+      [
+        "src/daemon/db_memory.cpp",
+        26
+      ],
+      [
+        "src/daemon/turn.cpp",
+        82
+      ]
+    ],
+    "impact": "В MemoryState загружаются только 20 фактов для prompt, а replace_memory удаляет всю таблицу и создаёт её заново. Остальные факты теряются; ID также меняются после сохранения.",
+    "fix": "Разделить полное хранилище и выборку для prompt; delta-операции add/update/delete по стабильному ID в транзакции; scope workspace/user, подтверждение сохранения.",
+    "acceptance": "200 фактов переживают несколько ходов; remember/forget меняют только нужные записи, ID остальных не меняются."
+  },
+  {
+    "id": "A08",
+    "priority": "P1",
+    "area": "gRPC",
+    "title": "Медленный UI блокирует обработку событий",
+    "evidence": "Подтверждено путём исполнения; нагрузочный сценарий slow-reader отдельно не запускался.",
+    "refs": [
+      [
+        "src/daemon/hub_waiters.cpp",
+        10
+      ],
+      [
+        "src/daemon/hub.cpp",
+        18
+      ],
+      [
+        "src/daemon/agent_service.cpp",
+        189
+      ]
+    ],
+    "impact": "Deferred callbacks вызываются синхронно; sink делает blocking ServerWriter::Write. Это происходит на пути обработки worker frame, а иногда watchdog/dispatch. Медленный подписчик способен остановить обработку worker events и задержать других подписчиков.",
+    "fix": "Ограниченные очереди на подписчика и отдельная доставка, coalescing Token, отключение slow consumer с возможностью replay. Async/callback gRPC можно внедрять постепенно.",
+    "acceptance": "Один клиент не читает поток: агент, watchdog и второй клиент продолжают работу; RAM ограничена и reconnect восстанавливает события."
+  },
+  {
+    "id": "A09",
+    "priority": "P1",
+    "area": "Оболочка",
+    "title": "RPC может зависнуть в UI; lifetime контекста не защищён",
+    "evidence": "Подтверждено кодом; TSAN и искусственное зависание UI не запускались.",
+    "refs": [
+      [
+        "src/shell/facade.cpp",
+        379
+      ],
+      [
+        "src/shell/facade.cpp",
+        427
+      ],
+      [
+        "src/shell/desk.cpp",
+        73
+      ],
+      [
+        "src/shell/desk_turn.cpp",
+        208
+      ]
+    ],
+    "impact": "Cancel/HardStop/Confirm/Answer выполняют синхронные RPC на UI-потоке без deadline и игнорируют статус. runSend игнорирует Finish. Atomic<ClientContext*> защищает адрес, но не lifetime: cancelActive может использовать уже уничтоженный стековый context.",
+    "fix": "Отдельный control executor с deadlines, владение контекстом под mutex/shared owner, единый status mapping. Pending карточки закрывать после подтверждённого результата, с retry при безопасной ошибке.",
+    "acceptance": "Потеря сети/демона, UNAUTHENTICATED, INVALID_ARGUMENT и быстрые переключения диалогов не замораживают окно; ASan/TSAN чисты."
+  },
+  {
+    "id": "A10",
+    "priority": "P1",
+    "area": "Жизненный цикл",
+    "title": "Queued task не фиксирует workdir и политику",
+    "evidence": "Подтверждено кодом, отдельный queue/settings race не запускался.",
+    "refs": [
+      [
+        "src/daemon/agent_service.cpp",
+        223
+      ],
+      [
+        "src/daemon/hub.cpp",
+        147
+      ],
+      [
+        "src/proto/arli.proto",
+        414
+      ]
+    ],
+    "impact": "В задаче сохранён текст, но workdir/model/permissions читаются из глобальных настроек при Claim. После смены настроек ожидающая задача может выполниться в другом проекте. Диалог не закреплён за workspace.",
+    "fix": "Workspace identity и неизменяемый task config snapshot при enqueue; секреты передавать ссылкой/актуальным секретом по явной политике, не дублировать в audit.",
+    "acceptance": "Поставить две задачи, сменить глобальный workdir до второй: она остаётся в исходном проекте и с согласованными разрешениями."
+  },
+  {
+    "id": "A11",
+    "priority": "P1",
+    "area": "gRPC",
+    "title": "Подтверждения отвечают успехом без принятия решения",
+    "evidence": "Воспроизведено: неверный confirm_token и ответ без вопроса вернули ok=true.",
+    "refs": [
+      [
+        "src/daemon/hub_control.cpp",
+        157
+      ],
+      [
+        "src/daemon/hub_control.cpp",
+        173
+      ],
+      [
+        "src/daemon/ask.cpp",
+        38
+      ]
+    ],
+    "impact": "Ответ означает только постановку сообщения в outbound при живой Session. Воркер может его отвергнуть. AskUser привязан только к dialog_id: старый ответ может попасть в новый вопрос того же диалога.",
+    "fix": "Стабильные approval_id/question_id, task_id/turn_id, состояние pending/resolved, worker ack и идемпотентное решение. Статусы NOT_FOUND/FAILED_PRECONDITION вместо ложного accepted.",
+    "acceptance": "Неверные/устаревшие/повторные ответы различимы; reconnect показывает только актуальные вопросы; дубли не изменяют уже принятое решение."
+  },
+  {
+    "id": "A12",
+    "priority": "P2",
+    "area": "gRPC",
+    "title": "Сессии и claims недостаточно коррелированы",
+    "evidence": "Подтверждено кодом; hostile worker/fault injection не выполнялись.",
+    "refs": [
+      [
+        "src/daemon/hub_control.cpp",
+        49
+      ],
+      [
+        "src/daemon/agent_worker.cpp",
+        95
+      ],
+      [
+        "src/daemon/server.cpp",
+        40
+      ]
+    ],
+    "impact": "Worker frames не сверяются с тройкой активной задачи и epoch сессии; task_id=0 подменяется busy_task. Нет capability/version negotiation и ClaimAccepted. Heartbeat обновляет last_event, поэтому при обычном idle_timeout=600 поддерживает живость даже без прогресса.",
+    "fix": "Session epoch/worker instance ID, строгая корреляция и валидация frame, ClaimAccepted, отдельные liveness/progress timers, причины завершения stream.",
+    "acceptance": "Устаревшие Done/Observation/Heartbeat не меняют новую задачу; несовместимый воркер отклонён; живой, но зависший инструмент обнаруживается отдельно."
+  },
+  {
+    "id": "A13",
+    "priority": "P2",
+    "area": "gRPC",
+    "title": "Replay не является полным возобновляемым журналом",
+    "evidence": "Подтверждено proto и преобразованием trace.",
+    "refs": [
+      [
+        "src/proto/arli.proto",
+        166
+      ],
+      [
+        "src/daemon/trace.cpp",
+        74
+      ],
+      [
+        "src/daemon/hub_waiters.cpp",
+        57
+      ],
+      [
+        "src/shell/desk_turn.cpp",
+        79
+      ]
+    ],
+    "impact": "Нет event_seq/after_seq и явного task_id в UI-событии. Tokens не сохраняются; часть snapshots и EditStats не восстанавливается из steps. Старые confirm/ask replay-ятся без событий решения, UI может показать уже закрытую карточку.",
+    "fix": "Курсор событий и snapshot+delta контракт, gap detection, task identity, pending interaction snapshot. Разделить replay истории и активные интерактивные карточки.",
+    "acceptance": "Reconnect до/после approval и во время генерации не дублирует/не теряет состояние; cursor resume работает после завершения задачи."
+  },
+  {
+    "id": "A14",
+    "priority": "P2",
+    "area": "gRPC",
+    "title": "Не заданы прикладные квоты и пагинация",
+    "evidence": "Подтверждено контрактом и обработчиками; пороги transport отдельно не измерялись.",
+    "refs": [
+      [
+        "src/daemon/agent_service.cpp",
+        33
+      ],
+      [
+        "src/daemon/agent_service.cpp",
+        62
+      ],
+      [
+        "src/daemon/db_steps.cpp",
+        66
+      ],
+      [
+        "src/daemon/server.cpp",
+        112
+      ]
+    ],
+    "impact": "ListDialogs/GetTurnTrace/OpenDialog собирают большие ответы; request text/settings/число подписчиков и очереди не имеют общего бюджета. Args сохраняются без общего лимита. Часть больших ответов упрётся в ограничения gRPC, память и SQLite.",
+    "fix": "Курсорная пагинация, лимиты размера входа/выхода/очередей, RESOURCE_EXHAUSTED с деталями, UTF-8-safe truncation, retention. Не повышать message limit без квот.",
+    "acceptance": "Большой trace и тысячи диалогов доступны страницами; oversized запрос отклонён до побочных эффектов; память bounded."
+  },
+  {
+    "id": "A15",
+    "priority": "P2",
+    "area": "gRPC",
+    "title": "Health синхронно зависит от LLM",
+    "evidence": "Подтверждено кодом.",
+    "refs": [
+      [
+        "src/daemon/agent_service.cpp",
+        21
+      ],
+      [
+        "src/daemon/llm_models.cpp",
+        81
+      ],
+      [
+        "src/shell/desk_jobs.cpp",
+        18
+      ]
+    ],
+    "impact": "Health делает сетевой /models с таймаутом до 8 секунд, UI ждёт 700 мс. Недоступная/медленная модель может выглядеть как недоступный демон и занимать RPC threads.",
+    "fix": "Дешёвый liveness; асинхронно кэшируемая LLM readiness; отдельные статусы и timestamp. Стандартный grpc.health.v1 для внешних клиентов — полезное дополнение.",
+    "acceptance": "При зависшем /models Health демона отвечает быстро, UI различает daemon/worker/model readiness."
+  },
+  {
+    "id": "A16",
+    "priority": "P1",
+    "area": "Жизненный цикл",
+    "title": "Удаление активного диалога не согласовано с задачей",
+    "evidence": "Подтверждено кодом, разрушительный сценарий не запускался.",
+    "refs": [
+      [
+        "src/daemon/agent_service.cpp",
+        57
+      ],
+      [
+        "src/daemon/db_messages.cpp",
+        65
+      ]
+    ],
+    "impact": "DeleteDialog удаляет диалог и каскадно tasks/messages, но не отменяет и не ожидает занятого воркера. Он может продолжать менять файлы; запись финального сообщения упадёт по FK.",
+    "fix": "Запретить удаление активного диалога либо реализовать cancel-and-wait под общим lifecycle lock, затем транзакционное удаление и cleanup trace/audit.",
+    "acceptance": "Удаление queued/running/waiting-confirm диалога имеет определённую семантику и не оставляет бесхозную работу."
+  },
+  {
+    "id": "A17",
+    "priority": "P2",
+    "area": "Файлы",
+    "title": "Нет надёжной транзакции набора правок и отката",
+    "evidence": "Подтверждено кодом; сбои диска и гонки symlink не инъецировались.",
+    "refs": [
+      [
+        "src/daemon/tools/backup.cpp",
+        5
+      ],
+      [
+        "src/daemon/tools/atomic_publish.hpp",
+        31
+      ],
+      [
+        "src/daemon/tools/tier_a_manage.cpp",
+        118
+      ]
+    ],
+    "impact": "Backup перезаписывает единственную .bak и глотает ошибки; copy/restore не атомарны. Проверка expected и rename разделены, путь разрешается до операции. Нет multi-file rollback, directory fsync, сохранения ACL/xattr.",
+    "fix": "Mutation service: snapshot/hash/version, защищённые dirfd-операции, проверяемая резервная копия вне доступного модели дерева, журнал changeset и revert. Учитывать конфликты внешнего редактора.",
+    "acceptance": "ENOSPC/permission/symlink swap/сбой второй правки не дают тихой потери исходника; можно откатить один ход, сохранив чужие изменения."
+  },
+  {
+    "id": "A18",
+    "priority": "P1",
+    "area": "Сеть",
+    "title": "HTTP guard не закрывает IPv6 и повторный DNS",
+    "evidence": "Подтверждено кодом; запросы к внутренним сервисам не выполнялись.",
+    "refs": [
+      [
+        "src/daemon/tools/http_tools.cpp",
+        103
+      ],
+      [
+        "src/daemon/tools/http_tools.cpp",
+        113
+      ],
+      [
+        "src/daemon/tools/http_tools.cpp",
+        131
+      ]
+    ],
+    "impact": "Проверяется только AF_INET, адреса IPv6 private/mapped пропускаются. После проверки getaddrinfo curl резолвит заново. Ручной URL parser и proxy env создают расхождение проверяемой и фактической цели.",
+    "fix": "Стандартный URL parser, полная проверка IPv4/IPv6, pin проверенного IP при соединении, явная proxy policy; сетевые mutations отдельной capability.",
+    "acceptance": "Локальный тестовый IPv6/DNS-rebinding/proxy стенд подтверждает запрет, обычный публичный HTTPS работает."
+  },
+  {
+    "id": "A19",
+    "priority": "P2",
+    "area": "Агент",
+    "title": "Проверка результата основана на эвристике команд",
+    "evidence": "Подтверждено кодом; прежние live eval проверяют конкретные успешные сценарии.",
+    "refs": [
+      [
+        "src/daemon/verification.hpp",
+        16
+      ],
+      [
+        "src/daemon/verification.hpp",
+        38
+      ],
+      [
+        "src/daemon/turn.cpp",
+        782
+      ]
+    ],
+    "impact": "Нет обязательного критерия завершения по задаче. Распознаётся ограниченный список тестовых команд; произвольный ./test.sh или составная команда могут не попасть в verification. Встроенный синтаксис ограничен JS/Python/JSON.",
+    "fix": "Task acceptance + VerificationPlan: что изменено, каким check подтверждено, по какому revision; типизированный результат проверок, честное unverified. Приоритет — проверки реального проекта, включая C++/QML.",
+    "acceptance": "Непрошедший пользовательский test script блокирует успешный outcome; устаревшая проверка инвалидируется; отсутствие тестов видно явно."
+  },
+  {
+    "id": "A20",
+    "priority": "P2",
+    "area": "Агент",
+    "title": "Контекст и правила проекта не оформлены как подсистема",
+    "evidence": "Подтверждено кодом; качество разных моделей этим аудитом не измерялось.",
+    "refs": [
+      [
+        "src/daemon/context.cpp",
+        55
+      ],
+      [
+        "src/daemon/context_summary.cpp",
+        27
+      ],
+      [
+        "src/daemon/llm_internal.cpp",
+        53
+      ],
+      [
+        "src/daemon/turn.cpp",
+        82
+      ]
+    ],
+    "impact": "Оценка bytes/4 не учитывает schemas/tools и выходной бюджет 4096/8192. Summary ограничивает старые указания четырьмя фрагментами по 600 байт. Автоматической загрузки и области действия AGENTS.md нет; модель может прочесть файл сама, но гарантий нет.",
+    "fix": "ContextBuilder с резервом ответа и schemas, usage от провайдера, durable summary и неизменяемые ограничения задачи; scoped repository instructions и отделение недоверенных данных.",
+    "acceptance": "Граничное окно не переполняется; длинное ограничение и правила вложенного каталога сохраняются после compaction и нового хода."
+  },
+  {
+    "id": "A21",
+    "priority": "P2",
+    "area": "Исполнение",
+    "title": "Фоновые jobs не имеют устойчивого владения процессом",
+    "evidence": "Подтверждено кодом.",
+    "refs": [
+      [
+        "src/daemon/jobs.cpp",
+        118
+      ],
+      [
+        "src/daemon/agent_jobs.cpp",
+        10
+      ]
+    ],
+    "impact": "Результат jobs определяется kill(pid,0), exit code отсутствует. StopJob сигналит process group по сохранённому PID без защиты от reuse; логи не ограничены. Обычная отмена shell не передаёт cancel token в runner.",
+    "fix": "Supervisor с pidfd либо PID+starttime, task/job ownership, exit code, log rotation, cancel всей группы и streaming bounded output.",
+    "acceptance": "После перезапуска и reuse PID чужой процесс не затронут; завершившаяся job имеет exit code; Cancel останавливает дочерние процессы."
+  },
+  {
+    "id": "A22",
+    "priority": "P2",
+    "area": "Интеграция",
+    "title": "Поставка gRPC-клиента и tool-адаптеров не закончена",
+    "evidence": "Подтверждено CMake, registry и скриптом интеграции.",
+    "refs": [
+      [
+        "src/CMakeLists.txt",
+        319
+      ],
+      [
+        "scripts/check-emperion-embed.sh",
+        1
+      ],
+      [
+        "src/daemon/tools/registry.cpp",
+        128
+      ]
+    ],
+    "impact": "Proto и embed есть. Нет готового export CMake package с версиями/транзитивными зависимостями и end-to-end внешнего клиента. gRPC сейчас управляет Arli; инструментов вызова прикладных сервисов Emperion в registry нет.",
+    "fix": "ArliClient SDK/примеры и install-tree consumer test. Отдельно GrpcToolProvider с allowlisted methods, schemas, credentials per service, deadlines/cancellation, audit и approval для mutations.",
+    "acceptance": "Независимое приложение из установленного пакета выполняет health/send/resume/cancel. Агент вызывает тестовый разрешённый сервис и не может вызвать запрещённый метод."
+  },
+  {
+    "id": "A23",
+    "priority": "P2",
+    "area": "Проверки",
+    "title": "Текущая приёмка не покрывает критические отказы",
+    "evidence": "Подтверждено: CI 19/19, но отдельный probe воспроизвёл дефекты.",
+    "refs": [
+      [
+        "scripts/ci.sh",
+        1
+      ],
+      [
+        "tests/lifecycle_test.cpp",
+        1
+      ],
+      [
+        "tests/audit_test.cpp",
+        2
+      ],
+      [
+        "docs/08-ops.md",
+        36
+      ]
+    ],
+    "impact": "Нет покрытия slow readers, больших историй, memory rollover, duplicate daemon, stale approvals, env isolation/background sandbox. ASan/UBSan option есть, регулярного sanitizer gate нет; TSAN не настроен. Документация ошибочно утверждает, что обычный shell не использует bwrap; версия требований устарела.",
+    "fix": "Добавить эти contract/fault-injection тесты, sanitizer job, proto compatibility gate, install/RPM/AppImage и Emperion consumer smoke. Обновить документацию по фактическому коду.",
+    "acceptance": "Новые регрессии падают на текущих дефектах и проходят после исправлений; релиз проверяется из установленного пакета."
+  },
+  {
+    "id": "A24",
+    "priority": "P2",
+    "area": "Намерение/файлы",
+    "title": "Запрет создания других файлов запрещает и явно запрошенный файл",
+    "evidence": "Живой gRPC-прогон: create_file result.txt отклонён при тексте «Создай result.txt … Других файлов не создавай». stream-live-initial.json; классификатор ищет не создавай без учёта области действия.",
+    "refs": [
+      [
+        "src/daemon/turn_policy.cpp",
+        96
+      ],
+      [
+        "src/daemon/turn.cpp",
+        412
+      ]
+    ],
+    "impact": "Явное задание не выполняется; модель может пытаться обойти неверный запрет через другие инструменты.",
+    "fix": "Выделить разрешённые создаваемые пути и применить запрет только к остальным; не отключать общий запрет по одной фразе.",
+    "acceptance": "Создание явно названного result.txt разрешено, создание соседнего файла отклоняется; глобальное «не создавай файлы» остаётся запретом."
+  },
+  {
+    "id": "A25",
+    "priority": "P2",
+    "area": "Агент/ответ пользователя",
+    "title": "Служебный OK загрязняет ответ ask_user",
+    "evidence": "Реальная Gemma записала OK\\nready вместо ready после успешной доставки ответа; interaction-live-initial.json.",
+    "refs": [
+      [
+        "src/daemon/turn.cpp",
+        759
+      ]
+    ],
+    "impact": "Модель может принять служебный маркер результата инструмента за часть пользовательских данных.",
+    "fix": "Успешный результат ask_user передавать буквально, без OK и обрезки; ошибки оставлять отдельным результатом.",
+    "acceptance": "Mock проверяет точный ответ; неизменённый live prompt получает ready и создаёт ровно пять байт, обе квитанции accepted."
+  }
+]

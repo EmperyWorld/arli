@@ -1,0 +1,20 @@
+{
+  "claim_receipt": "accepted",
+  "file_content": "OK\nready",
+  "file_count": 1,
+  "first_event_id": 1,
+  "grpc_ok": true,
+  "interaction_receipt": "accepted",
+  "last_event_id": 23,
+  "model": "/models/gemma-4-26B.gguf",
+  "model_endpoint": "http://127.0.0.1:8080/v1",
+  "ordered_without_duplicates": true,
+  "passed": false,
+  "prompt": "Сначала обязательно спроси через ask_user, какое слово записать в файл. Дождись ответа. Затем создай result.txt с полученным словом без перевода строки и прочитай его для проверки. Используй файловые инструменты; shell не нужен.",
+  "questions": 1,
+  "read_verified": true,
+  "resumed_events": 22,
+  "task_id": 1,
+  "terminal_status": "done",
+  "workspace": "/tmp/arli-live-resume-547Qpx/workspace"
+}

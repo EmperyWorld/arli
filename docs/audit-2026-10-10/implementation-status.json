@@ -1,0 +1,220 @@
+{
+  "date": "2026-10-14",
+  "scope": "Реализация полного цикла аудита: agent/tool reliability, authenticated gRPC, bounded history, restart policy, sanitizers, Qwen3.8 live gates, Emperion contract и RPM 0.5.5. Остаточные архитектурные ограничения перечислены без завышения статуса.",
+  "items": [
+    {
+      "id": "A01",
+      "status": "implemented",
+      "result": "Foreground/background/rg/Git используют allowlist env, закрытые FD и общий sandbox; private state недоступен файловым инструментам и shell. Общий фильтр известных credentials защищает log/audit до truncation, tool results до LLM, UTF-8 token stream, TurnEvent/messages, relay/journal/replay и UI replies. Private SHA-256 fingerprint ledger сохраняет защиту после rotation/restart без plaintext ключей. Wave18: supervisor фильтрует stdout/stderr до обеих log rotations, forced stop не пишет withheld prefix, I/O/filter failure останавливает owned child и даёт lost. Unit/реальные процессы/restart/ошибки проверены; live Gemma normal background workflow прошёл. Граница: неизвестные/преобразованные секреты, неизвестные старые ключи до внедрения ledger и другие процессы того же UID не покрыты; старые raw logs не переписываются."
+    },
+    {
+      "id": "A02",
+      "status": "implemented",
+      "result": "Foreground и background используют общий bubblewrap policy, очищенное окружение и rlimits. Регрессия проверяет реальное выполнение background и запрет записи вне workspace."
+    },
+    {
+      "id": "A03",
+      "status": "implemented",
+      "result": "Read-only workspace монтируется ro для shell/interpreter/build hooks без unsandboxed fallback; любой http_request в read_only отклоняется. В writable GET проходит SSRF guard, а методы с побочным эффектом требуют отдельного UI confirmation до сетевого запроса. Реальные shell/write и policy-регрессии проходят."
+    },
+    {
+      "id": "A04",
+      "status": "implemented",
+      "result": "Done расширен outcome/error_code; worker, orchestrator, trace replay и UI учитывают terminal outcome. Провал проверки не становится done."
+    },
+    {
+      "id": "A05",
+      "status": "implemented",
+      "result": "Эксклюзивный flock базы до init/reconcile. Второй daemon не изменяет живую задачу."
+    },
+    {
+      "id": "A06",
+      "status": "implemented",
+      "result": "Берутся последние N сообщений, возвращаются хронологически; регрессия 405→последние 400."
+    },
+    {
+      "id": "A07",
+      "status": "implemented",
+      "result": "Worker загружает полный store, inject остаётся ограниченным. Snapshot транзакционный, сохраняет ID; sqlite_sequence предотвращает повторное использование ID после очистки."
+    },
+    {
+      "id": "A08",
+      "status": "implemented",
+      "result": "UI RPC читает persistent events постранично (64 события/~4 MiB JSON или одно крупное событие). В callback hub нет Write. Регрессия с не читающим клиентом и 3 MiB ответом подтверждает завершение следующей задачи и доступность Health."
+    },
+    {
+      "id": "A09",
+      "status": "implemented",
+      "result": "Qt RPC имеют deadlines, защищённое владение ClientContext, generation fencing, Finish/error handling и bounded reconnect с тем же request_id/cursor. Потеря daemon, stale replies, поздние страницы и stream resume проверены реальными Qt/authenticated gRPC fixtures. ASan/UBSan прошли 71/71; TSan прошёл 70/70, а shell-ui проверяется release+ASan из-за подтверждённого падения самого TSan runtime внутри системного Qt/QML."
+    },
+    {
+      "id": "A10",
+      "status": "implemented",
+      "result": "Queued settings/policy snapshot is immutable and secret-free; ordinary LLM tasks reject endpoint changes. Wave31 historical revert binds source task/turn/workdir with current policy. Wave32 canonical path plus statx device/inode/birth-time identity of existing root or nearest existing ancestor persists in snapshot and Claim with fail-closed worker capability. Worker holds root descriptor, creates missing descendants with mkdirat/nofollow, validates before execution and at round/tool/acceptance/revert boundaries. Journals also retain actual root identity. Unit and actual queued daemon/worker tests cover alias retarget, root/ancestor replacement, late symlink, normal child changes and persistence; live Gemma/Qt restart and historical revert passed. Scope: queue/admission and boundary identity checks; residual check-to-syscall races remain A17. Legacy tasks cannot gain retrospective identity; unsupported statx birth-time filesystems explicitly fail."
+    },
+    {
+      "id": "A11",
+      "status": "implemented",
+      "result": "Question/command IDs, canonical relay, capability negotiation, durable payload-free receipts, bounded retry и dedup различают stale/repeated/accepted ответы. ACK предшествует Observation/Done, reconnect восстанавливает только актуальное взаимодействие, timeout/cancel дают явный terminal outcome. Legacy UI поддерживается только совместимым fallback без строгой защиты question_id."
+    },
+    {
+      "id": "A12",
+      "status": "implemented",
+      "result": "Session generation, launch credential, Hello PID/capabilities, claim command_id/ACK и worker dedup не позволяют stale frames менять новую задачу. Watchdog отдельно обнаруживает отсутствие Hello/heartbeat; холодному старту дано 15 секунд. После restart queued задачи сохраняются, а прерванная running задача явно завершается worker_lost вместо небезопасного повторного исполнения."
+    },
+    {
+      "id": "A13",
+      "status": "implemented",
+      "result": "Schema 9: persistent events для всех payload, task_id/event_id/after_event_id, завершённый AttachTurn, дедупликация Send.request_id после restart, атомарные terminal status/event. Старые pre-journal traces читаются через OpenDialog/GetTurnTrace, отсутствовавшие токены не восстанавливаются. Регрессии disconnect/restart/rollback/старых вопросов проходят."
+    },
+    {
+      "id": "A14",
+      "status": "implemented",
+      "result": "Task admission, active stream slots, request/settings/worker payloads и server/channel messages ограничены. Dialogs, messages, durable events и trace имеют count/byte keyset pagination с Qt generation fencing. History retention пакетно оставляет 5000 terminal/90 дней; oversized запросы отклоняются до побочного эффекта. Регрессии больших историй, stale cursors, slow readers и restart проходят."
+    },
+    {
+      "id": "A15",
+      "status": "implemented",
+      "result": "Health читает результат фонового probe; /models больше не блокирует Health. Проверка 700ms deadline при mock /models 1200ms."
+    },
+    {
+      "id": "A16",
+      "status": "implemented",
+      "result": "DeleteDialog отклоняется при активной задаче под тем же enqueue mutex."
+    },
+    {
+      "id": "A17",
+      "status": "implemented",
+      "result": "Файловые публикации используют dirfd/O_NOFOLLOW, atomic rename, inode/ctime/parent recheck, fsync и protected immutable snapshots. batch_replace делает preflight всех 2–16 файлов и откатывает уже опубликованные файлы при сбое следующей публикации. Move/delete и bounded directory tree пишутся в durable changeset; revert восстанавливает удалённые файлы и отсутствующие родители. Внешне изменённый файл не затирается: он остаётся conflict, тогда как независимые пути откатываются. POSIX не даёт универсальный CAS для rename/unlink, поэтому конфликт обнаруживается максимально поздней проверкой, а не обещанием абсолютной защиты от враждебного same-UID процесса."
+    },
+    {
+      "id": "A18",
+      "status": "implemented",
+      "result": "CURLU запрещает credentials/zone IDs/не-http(s); все A/AAAA адреса проходят public-address validation, и любой mixed private/public ответ отклоняется. Полный проверенный набор закрепляется CURLOPT_RESOLVE, redirect и proxy env отключены, поэтому повторного DNS после проверки нет. IPv4/IPv6, duplicate и rebinding-mix покрыты детерминированным seam-test. Системный getaddrinfo остаётся блокирующим ограничением доступности, но не позволяет SSRF bypass."
+    },
+    {
+      "id": "A19",
+      "status": "implemented",
+      "result": "Критерии приёмки immutable и durable до первой мутации; file predicates проверяются с диска, command_succeeds выполняет ровно явно заданную команду и инвалидируется после следующей мутации, read_after_each_write требует same-version reread. Непрошедший script блокирует done и допускает не более двух repair; отсутствие проверяемого критерия отмечается явно. Семантическая полнота требований модели остаётся измеряемым качеством модели, а не ложной гарантией оркестратора."
+    },
+    {
+      "id": "A20",
+      "status": "implemented",
+      "result": "Wire-level budget учитывает messages, tools и template overhead; локальный llama.cpp/Qwen получает точное число через apply-template+tokenize, provider usage калибрует fallback. Compaction сохраняет системные ограничения, scoped AGENTS.md, dialog pins и durable action snapshot между ходами/restart. Граничные и live Qwen тесты проходят; для внешнего provider без tokenizer API используется консервативная оценка с калибровкой usage."
+    },
+    {
+      "id": "A21",
+      "status": "implemented",
+      "result": "Wave9: отдельный arli-job-supervisor владеет дочерней группой, переживает worker, запускает команду только после записи jobs в БД, сохраняет exit code и ротирует два лога по 1 MiB. Schema12: boot_id/starttime identity + exit_code; stop через pidfd с проверкой identity, legacy/stale записи lost без сигналов. Проверены exit7, последний вывод, ротация, DB reopen, stop дерева, supervisor SIGKILL, отказ чужому PID. ListJobs(include_finished) передаёт terminal/exit_code; UI StopJob получил deadline и сообщение об отказе. Wave19: schema13 owner dialog/task/turn из Claim, атомарная проверка владельца при INSERT, additive ListJobs filters/JobInfo owner/StopJob expected owner, Qt отображение. Wave20: atomic running quotas global/dialog/task 16/8/4, preflight до fork, daemon JobMaintenance с bounded paging независимо от UI/health. Concurrent DB admissions и exit/restart без ListJobs проверены. Wave21: schema14 finished_at, terminal retention последних 128 rows / 7 дней, bounded daemon cleanup private job directories через dirfd/nofollow, active/live identity и неизвестные файлы сохраняются. Row удаляется после файлов, failed pre-GO launch убирает каталог. Проверены age/count/aliases/partial retry и daemon restart без UI. Wave22: launcher/supervisor directory leases, bounded orphan scan с grace и защитой relative/alias rows. SIGKILL до helper, после R до GO без/с DB row, после GO, pidfd stop дерева и actual daemon orphan cleanup проверены. Wave23: additive WatchJobLog с signed job/file birth-time position, resume после restart, explicit rotation gap, cross-generation redaction, 8-stream cap и 15s lease/slow-reader cancellation. Реальные daemon/gRPC tests и live Gemma streamed ready/exit7 прошли. Wave24: Qt JobLogWatch на независимом потоке с cursor/retry, bounded Unicode tail и coalesced snapshots, generation fencing, immediate switch/detach, gap/reset/legacy warnings, cancellation при hide/destruction. Настоящие facade/authenticated RPC и QML render tests прошли. A21 acceptance подтверждается ownership/exit/rotation/cancel-tree/reuse-PID/restart/crash/retention/stream/UI регрессиями; модельный normal-flow отдельно проверен Gemma. Файловая система без statx birth time получает явный отказ нового RPC, legacy ListJobs работает. Wave10: UI показывает историю с exit code, активные записи идут первыми; IPC имеет общий неблокирующий deadline, сохраняется статус последнего async child. Live Gemma: ровно один start_background после точного approval, ready/exit7 доступны через gRPC после restart."
+    },
+    {
+      "id": "A22",
+      "status": "implemented",
+      "result": "Relocatable installed SDK client/embed, arli.v1 proto и allowlisted GrpcToolProvider поставляются RPM. Независимые consumer tests выполняют health/send/resume/retry/cancel; provider проверяет schema, loopback/local auth, method allowlist, limits, deadline/cancel/approval. Emperion proto синхронизирован, check-emperion-embed.sh проходит, фактический Emperion CMake использует libarli_embed и AgentPage.qml."
+    },
+    {
+      "id": "A23",
+      "status": "implemented",
+      "result": "Release CI и RPM %check проходят 71/71; ASan/UBSan 71/71 (70 в полном прогоне плюс отдельно повторённый sanitizer-timeout test), TSan 70/70. Реальный Qwen3.8 прошёл bugfix, transactional multi-file edit, tool-error recovery и exact-byte edit/revert. RPM 0.5.5-1.fc44 построен из allowlisted archive; metadata, payload, SDK libraries и SHA-256 проверены."
+    },
+    {
+      "id": "A24",
+      "status": "implemented",
+      "result": "Scoped creation policy разрешает явно запрошенный путь и блокирует другие назначения create/write/copy/move/restore; полный запрет сохраняет приоритет. Проверены регистр, path aliases, traversal, symlink и перенос каталога. Исходный live prompt восстановлен: реальная Gemma через daemon/agent/gRPC создала ровно ready (5 байт) и прочитала файл; восстановление потока прошло без повторов. Нераспознанные формулировки не расширяют разрешения."
+    },
+    {
+      "id": "A25",
+      "status": "implemented",
+      "result": "Успешный ask_user передаёт буквальный текст пользователя без OK/обрезки. Неудачный исходный live сохранён; тот же prompt после исправления прошёл с обеими квитанциями accepted и ровно ready (5 байт)."
+    }
+  ],
+  "verification": {
+    "ci": "bash scripts/ci.sh: 20/20 passed; arli-law, qmllint, module size: passed",
+    "live_initial": "4/5; ready newline expectation was underspecified",
+    "live_final": "5/5; real local Gemma /models/gemma-4-26B.gguf via production run_turn",
+    "deployment": "Not installed; working tree and build-ci only",
+    "stage2_ci": "bash scripts/ci.sh: 21/21; arli-law, qmllint, module size passed",
+    "stage2_live": "real local Gemma via daemon + agent; disconnect after event 1, resume events 2–16, same task; one file, exactly ready (5 bytes). Initial failed run retained.",
+    "a24_live": "passed: original unmodified prompt, real Gemma, create_file + read_file, one file with 5 bytes ready, gRPC reconnect events 2–16; a24-live-final.json",
+    "a24_ci": "bash scripts/ci.sh: 22/22 passed; arli-law, qmllint, module size passed; git diff --check passed",
+    "session_live": "passed: real Gemma through daemon/agent and authenticated gRPC; original A24 prompt, create/read exactly ready, reconnect without duplicates; session-live-final.json",
+    "session_ci": "bash scripts/ci.sh: 23/23 passed; arli-law, qmllint, module size and git diff --check passed",
+    "claim_ci": "bash scripts/ci.sh: 24/24 passed; arli-law, qmllint, module size and git diff --check passed",
+    "claim_live": "passed: real Gemma through daemon/agent/gRPC; persisted Claim receipt accepted; original prompt, create/read exactly ready, reconnect without duplicates; claim-live-final.json",
+    "interaction_live": "passed after A25 fix: real local Gemma, one ask_user, answer ready, Claim+interaction receipts accepted, create/read 5 bytes ready; initial failure retained, same prompt.",
+    "wave1_ci": "bash scripts/ci.sh: 25/25 passed; actual approval/denial echo commands and answer receipt replay included; arli-law, qmllint, module size and git diff --check passed",
+    "wave2_live": "passed: real Gemma through daemon/agent, ask/reply/create/read, receipts accepted, provider_usage true; last prompt 4051 tokens, response reserve 4096; context-budget-live-final.json",
+    "wave2_ci": "bash scripts/ci.sh: 26/26 passed; request-budget, usage parser, long editing turn with compaction, QML/UI included; arli-law, qmllint, module size, git diff --check passed",
+    "wave3_ci": "bash scripts/ci.sh: 27/27 passed; scoped rules, changed/deleted/symlink/oversize, compaction, actual worker mutation gate; arli-law, qmllint, module size, git diff --check passed",
+    "wave3_live": "passed: real Gemma, content ready specified only by nested AGENTS.md; create/read one 5-byte file, usage and Claim ACK, reconnect. One RULES_UPDATED and one denied shell attempt; workspace-rules-live-final.json.",
+    "wave4_live": "passed: real Gemma through daemon/agent/gRPC created/read ready; after process exit SQLite retained both successful action metadata; durable-context-live-final.json. Live next-turn recall not yet tested.",
+    "wave4_ci": "bash scripts/ci.sh: 28/28 passed; durable snapshot database reopen, workdir isolation, bounds, compaction, hidden chat history; arli-law, qmllint, module size and git diff --check passed",
+    "wave5_live": "passed: real Gemma, long pinned instructions, two create/read turns separated by full daemon/agent restart; result.txt and second.txt both exactly ready, value absent from turn prompts; pinned-instructions-live-final.json.",
+    "wave5_ci": "bash scripts/ci.sh: 28/28 passed; authenticated rules RPC limits/clear, immutable queued Claim snapshot, legacy worker capability rejection, >600-byte pinned rule through long-history compaction; arli-law, qmllint, module size and git diff --check passed. Initial regressions retained in /tmp/arli-wave5-ci.log and /tmp/arli-wave5-targeted.log.",
+    "wave6_live_initial": "4/5. bugfix, multi_file, recovery and file_integrity passed; long_turn falsely completed after 15/16 edits. Failure retained in file-publication-live-initial.json; A19 open.",
+    "wave6_live_integrity_final": "passed on final build: real Gemma edited line 1501 while preserving CRLF/NBSP and no EOF newline, filled empty file, reread both; file-publication-live-integrity-final.json. Does not close long_turn A19 failure.",
+    "wave6_ci": "bash scripts/ci.sh: 29/29 passed on final state; ENOSPC/EIO/EACCES injections, stale/external changes, symlink parent swap/backup/target, workspace prefix escape, backup versions, delete+restore mode/xattr; arli-law, qmllint, module size and git diff --check passed.",
+    "wave7_live": "acceptance-live-initial.json: failed 13/16 with empty plan; acceptance-live-final.json: passed 16/16, 33 tools, 6 compactions; plan line_range 1..16; partial because procedural requirements not checked.",
+    "wave7_ci": "bash scripts/ci.sh: 30/30 tests, arli-law, qmllint, module size law passed; /tmp/arli-wave7-ci-final.log; git diff --check clean.",
+    "wave8_live": "worker-identity-live-final.json: passed, real Gemma via daemon/agent/authenticated gRPC; stream resume without duplicates, full restart, next turn passed with new worker.",
+    "wave8_ci": "bash scripts/ci.sh: 31/31 passed; arli-law, qmllint, module size law and git diff --check passed; /tmp/arli-wave8-ci.log.",
+    "wave9_ci": "bash scripts/ci.sh: 32/32 passed, arli-law, qmllint, module size law, git diff --check; /tmp/arli-wave9-ci.log. Real OS/bubblewrap supervisor lifecycle, crash/stop/rotation/exit7 and authenticated gRPC ListJobs terminal result checked. No live-model decision test in this wave.",
+    "wave10_live": "background-live-final.json: real Gemma, actual daemon/worker/supervisor/bubblewrap, exact literal harmless fixture approval through gRPC, one start, exit7 and ready output survive daemon restart.",
+    "wave10_ci": "bash scripts/ci.sh: 33/33 passed, arli-law, qmllint, module size and git diff --check passed; /tmp/arli-wave10-ci.log. Backpressure/trickle deadline, async child exit status and existing crash/tree-stop regressions passed.",
+    "wave11_sdk": "scripts/check-installed-sdk.sh: INSTALLED_SDK_OK; SDK component staged only in /tmp and relocated, independent client without Qt and embed consumer passed authorized/unauthorized fixture RPC; /tmp/arli-wave11-sdk.log. Initial Qt assertion incorrectly required daemon-provided version before connection, corrected to verify AgentFacade metaobject.",
+    "wave11_ci": "bash scripts/ci.sh: 33/33 plus INSTALLED_SDK_OK, arli-law, qmllint, module size and git diff --check passed; /tmp/arli-wave11-ci-final.log. No host installation; temporary SDK component only.",
+    "wave12_sdk": "SDK_DAEMON_ROUNDTRIP_OK health send resume retry cancel and INSTALLED_SDK_OK; /tmp/arli-wave12-sdk2.log. External app links only installed SDK, no core/database/internal helpers. First startup readiness without wait_for_ready failed; explicit wait_for_ready + deadline passed.",
+    "wave12_ci": "bash scripts/ci.sh: 33/33 plus SDK_DAEMON_ROUNDTRIP_OK and INSTALLED_SDK_OK; arli-law, qmllint, module size law and git diff --check passed; /tmp/arli-wave12-ci.log.",
+    "wave13_live": "grpc-provider-live-final.json: real Gemma via production run_turn and isolated authenticated application gRPC service; exactly one approved mutation to ready; through_daemon=false (standalone registry delivery not implemented).",
+    "wave13_ci": "bash scripts/ci.sh: 34/34 plus SDK_DAEMON_ROUNDTRIP_OK and INSTALLED_SDK_OK, including exported Arli::grpc_tools fixture call; arli-law, qmllint, module size and git diff --check passed; /tmp/arli-wave13-ci.log.",
+    "wave14_ci": "bash scripts/ci.sh: 35/35 plus SDK_DAEMON_ROUNDTRIP_OK and INSTALLED_SDK_OK; arli-law, qmllint, module size law passed; /tmp/arli-wave14-ci.log. Real bubblewrap read-only rg/Git, literal --pre pattern, clean environment, private state aliases/ancestor mutations and default workspace checked.",
+    "wave14_live": "private-state-live-initial.json failed before writes because old fixture put projects in private state. Fixed live agent/web fixture paths to state/workspace. private-state-live-final.json: real Gemma file_integrity passed, 6 tools, 2 writes, no tool errors, exact bytes and no extra files.",
+    "wave15_live": "grpc-registry-live-final.json: real Gemma, through_daemon=true, one approval, one service write and observation, no service credential in UI events. Registry published after worker startup.",
+    "wave15_ci": "bash scripts/ci.sh: 37/37, SDK_DAEMON_ROUNDTRIP_OK, INSTALLED_SDK_OK, arli-law, qmllint, module size law and git diff --check passed; /tmp/arli-wave15-ci.log. grpc-registry-mock-final.json records actual daemon/worker accept/deny/corrupt-config regression.",
+    "wave16_ci": "bash scripts/ci.sh: 39/39 plus SDK_DAEMON_ROUNDTRIP_OK and INSTALLED_SDK_OK; arli-law, qmllint, module size, git diff --check passed; /tmp/arli-wave16-ci.log. Redaction unit includes every split, byte stream, JSON escapes, audit pre-truncation, concurrent registrations; real daemon/worker/mock checks stream/history/task UI/audit/log/rotation within process.",
+    "wave16_live": "redaction-live-final.json: real Gemma through daemon/worker with registry, one exact approval and service mutation, passed. This checks normal workflow regression; synthetic credential disclosure assertions are deterministic tests, not a live adversarial model eval.",
+    "wave17_live": "durable-redaction-live-initial.json failed: one RPC mutation succeeded, but buffering split UTF-8 Token and protobuf broke Session. Fixed whole-codepoint emission; durable-redaction-live-final.json passed with real Gemma through daemon/worker, one approval/one mutation. All chunk sizes over Cyrillic/emoji/old-key fixture pass.",
+    "wave17_ci": "Final bash scripts/ci.sh: 40/40, SDK_DAEMON_ROUNDTRIP_OK and INSTALLED_SDK_OK with OpenSSL Crypto, arli-law, qmllint, module size law and git diff --check; /tmp/arli-wave17-ci-final.log. Independent-process fingerprint/UTF-8 tests, real daemon rotation/restart/idempotent retry and tool result before LLM passed. Initial CI also passed but live caught UTF-8 defect, fixed and final suite rerun.",
+    "wave18_live": "background-redaction-live-final.json: real Gemma and daemon/worker/supervisor/bubblewrap, exactly one approved start, ready and exit7 survive daemon restart. Secret split/rotation/failure assertions are deterministic real OS tests.",
+    "wave18_ci": "bash scripts/ci.sh: 41/41, SDK_DAEMON_ROUNDTRIP_OK and INSTALLED_SDK_OK, arli-law, qmllint, module size and git diff --check; /tmp/arli-wave18-ci.log. Real supervisor tests cover split stdout/stderr, no inherited token, UTF-8/rotation, stop prefix discard and torn ledger -> lost with killed child.",
+    "wave19_live": "job-ownership-live-final.json: real Gemma through daemon/worker/supervisor, one approved start, owner_verified=true for dialog/task/turn from Send, ownership and ready/exit7 survive daemon restart.",
+    "wave19_ci": "bash scripts/ci.sh: 43/43, SDK_DAEMON_ROUNDTRIP_OK and INSTALLED_SDK_OK, arli-law, qmllint, module size and git diff --check; /tmp/arli-wave19-ci.log. v12->13 jobs migration, filter-before-limit, terminal/cross-dialog task rejection, real Claim ownership/StopJob mismatch/restart covered.",
+    "wave20_live": "job-maintenance-live-final.json: real Gemma with quotas/maintenance enabled, one approved background start, verified owner, ready/exit7 after daemon restart. No-UI reconciliation and quota saturation use deterministic real-process/DB tests.",
+    "wave20_ci": "bash scripts/ci.sh: 45/45, SDK_DAEMON_ROUNDTRIP_OK and INSTALLED_SDK_OK, arli-law, qmllint, module size and git diff --check; /tmp/arli-wave20-ci.log. 32 independent SQLite connections admit exactly 16 jobs; per-owner caps/release/no-side-effect denial and real daemon no-UI/restart reconciliation covered.",
+    "wave21_live": "job-retention-live-final.json: настоящая Gemma через daemon/worker/supervisor/gRPC, одно точное approval/start, ready/exit7/owner/finished_at после restart. Возрастная очистка проверена детерминированными OS/DB тестами.",
+    "wave21_ci": "bash scripts/ci.sh: 46/46, SDK_DAEMON_ROUNDTRIP_OK, INSTALLED_SDK_OK, arli-law, qmllint, module size и git diff --check прошли; /tmp/arli-wave21-ci.log. Targeted 6/6, retention age/count/live identity/aliases/unknown files/partial retry/pre-GO cleanup и actual daemon restart без UI.",
+    "wave22_live": "job-orphans-live-final.json: настоящая Gemma через daemon/worker/gRPC/supervisor, одно exact approval/start, ready/exit7/owner/finished_at после restart. Аварийные границы проверены отдельно реальными OS процессами, не решениями модели.",
+    "wave22_ci": "bash scripts/ci.sh: 47/47, SDK_DAEMON_ROUNDTRIP_OK, INSTALLED_SDK_OK, arli-law, qmllint, module size и git diff --check прошли; /tmp/arli-wave22-ci.log. Targeted 5/5; SIGKILL before helper / R before GO without and with DB row / production launch after GO, safe pidfd tree stop, 140 orphan directories and real daemon restart cleanup.",
+    "wave23_live": "job-stream-live-final.json: actual Gemma через daemon/worker/supervisor, one approved start, после daemon restart WatchJobLog streamed=true, ровно ready и terminal exit7; owner также проверен. Rotation, tamper, slow reader и redaction boundaries проверены deterministic actual daemon tests.",
+    "wave23_ci": "bash scripts/ci.sh: 48/48, SDK_DAEMON_ROUNDTRIP_OK, INSTALLED_SDK_OK, arli-law, qmllint, module size и git diff --check прошли; /tmp/arli-wave23-ci.log. Actual daemon WatchJobLog tests: signed resume/restart/rotations/gap/secret boundaries, tamper/cross-job/unauth/owner denial, 8 slow readers with Health, client deadline and non-reading/no-deadline lease expiry. Initial targeted also passed.",
+    "wave24_live": "job-log-ui-live-final.json: настоящая Gemma через daemon/worker/supervisor, один точный approved start, после restart WatchJobLog streamed ready/exit7. Qt не участвует в live executable; GUI отдельно проверен настоящим AgentFacade/QGuiApplication/authenticated fixture RPC и QML render tests.",
+    "wave24_ci": "Final bash scripts/ci.sh: 49/49, SDK_DAEMON_ROUNDTRIP_OK, INSTALLED_SDK_OK, arli-law, qmllint, module size и git diff --check прошли; /tmp/arli-wave24-ci-final.log. Первый CI 48/49 выявил QML onVisibleChanged до required desk; guard исправлен, targeted 2/2 и full rerun прошли. Qt tests: reconnect cursor, generation fencing, responsive switch/stop, detach/destruction, coalescing/UTF-16 bound, legacy fallback, invalid cursor reset, result-tab/detach QML.",
+    "wave25_live": "protected-backup-live-final.json: actual Gemma via production run_turn, file_integrity passed, 6 tools/2 writes/no errors, CRLF/NBSP/no-EOF preserved. Отдельная disk verification подтвердила исходные bytes large.txt/empty.txt в private latest/history, mode-private ancestors, no .arli-bak in workspace. Это direct run_turn, не UI/daemon eval.",
+    "wave25_ci": "bash scripts/ci.sh: 50/50, SDK_DAEMON_ROUNDTRIP_OK, INSTALLED_SDK_OK, arli-law, qmllint, module size и git diff --check прошли; /tmp/arli-wave25-ci.log. Targeted 6/6; private project/path isolation, alias/permissions/symlink, real bwrap, legacy refusal, max filename, disk faults and metadata restore. CTest state isolated per test.",
+    "wave26_ci": "Final scripts/ci.sh: 51/51, SDK_DAEMON_ROUNDTRIP_OK, INSTALLED_SDK_OK, arli-law, qmllint, module size; /tmp/arli-wave26-ci-final.log. Initial CI passed but live exposed file_stat formatted-line counting and rg_search regular-file rules traversal; regression fixes passed final suite.",
+    "wave26_live": "mutation-journal-live-initial.json retained failed actual Gemma run (disk correct, rules error). After fixes identical file_integrity prompt passed: mutation-journal-live-final.json, 6 tools, 2 writes, no errors; private journal and original snapshots separately verified. Direct production run_turn, not Qt/daemon eval.",
+    "wave27_live": "mutation-recovery-live-final.json: actual Gemma direct run_turn, file_integrity passed, 5 tools/2 writes/no errors; journal snapshots and current hashes separately checked. Crash recovery classification is verified in deterministic real child-process tests, not by the model.",
+    "wave27_ci": "scripts/ci.sh: 51/51, SDK_DAEMON_ROUNDTRIP_OK, INSTALLED_SDK_OK, arli-law, qmllint, module size and git diff --check passed; /tmp/arli-wave27-ci.log. Recovery tests include actual child exit on both sides of rename, active lease, foreign/corrupt/symlink/traversal/repeated/no-op cases. Initial compile error in explicit JSON string comparison corrected before tests.",
+    "wave28_live": "mutation-revert-live-final.json: actual Gemma direct run_turn, 6 tools/2 writes/no errors; then production worker-library revert returned complete=true and revert_verified=true for exact original large.txt CRLF/NBSP/no-EOF and empty.txt. No GUI/gRPC revert claim; source and undo journal IDs retained.",
+    "wave28_ci": "scripts/ci.sh: 51/51, SDK_DAEMON_ROUNDTRIP_OK, INSTALLED_SDK_OK, arli-law, qmllint, module size and git diff --check passed; /tmp/arli-wave28-ci.log. Journal suite covers partial conflict rollback, repeated path, created-file deletion/recreation, source link, wrong owner, retry, undo-of-undo, actual crash after rename, ENOSPC intent and EACCES second restore.",
+    "wave29_live": "revert-queue-live-final.json: actual Gemma direct run_turn regression, 6 tools/2 writes/no errors and revert_verified=true. RPC path is separately tested with actual daemon/worker and deliberately unavailable LLM; live executable does not claim GUI/RPC revert coverage.",
+    "wave29_ci": "scripts/ci.sh: 52/52, SDK_DAEMON_ROUNDTRIP_OK, INSTALLED_SDK_OK, arli-law, qmllint, module size and git diff --check passed; /tmp/arli-wave29-ci.log. Initial targeted 2/2. Actual daemon/worker checks mandatory approval, deny/cancel, read-only, invalid IDs, auth/owner, no model dependency, durable request dedup/restart and Send collision. Journal unit covers cancellation between files and retry.",
+    "wave30_live": "revert-qt-live-final.json: actual Gemma through production daemon/worker and offscreen Qt AgentFacade; exact model change, daemon restart, historical changeset discovery, required preview/approval, exact revert, undo journal in history. Independent SQLite verification: both tasks done. QML button click/render is separately tested, live uses facade methods.",
+    "wave30_ci": "scripts/ci.sh: 53/53, SDK_DAEMON_ROUNDTRIP_OK, INSTALLED_SDK_OK, arli-law, qmllint, module size and git diff --check passed; /tmp/arli-wave30-ci.log. Targeted 3/3. Real Qt/authenticated fixture injects disconnect and asserts stable revert request ID/cursor/control approval, late trace fencing, legacy/selected/read-only guards, draft preservation; QML button click/disabled rendering passed.",
+    "wave31_live": "crash-catalog-qt-live-final.json: actual Gemma through daemon/worker/offscreen Qt facade, model edit then daemon restart and current workspace change; historical approved revert restores only original workspace and exposes undo journal. SQLite verifies both tasks done and source task/turn/workdir binding. Actual crash-without-Done separately covered by crash-revert-daemon test.",
+    "wave31_ci": "scripts/ci.sh: 55/55, SDK_DAEMON_ROUNDTRIP_OK, INSTALLED_SDK_OK, arli-law, qmllint, module size and git diff --check passed; /tmp/arli-wave31-ci.log. Targeted 6/6. Catalog active/ownership/symlink/quota and pre-write refusal; actual child exit without Done, daemon reconciliation/discovery, changed workspace and mismatched source task rejection; Qt synthetic changeset and TaskCard recovery entry passed.",
+    "wave32_ci": "scripts/ci.sh: 57/57, SDK_DAEMON_ROUNDTRIP_OK, INSTALLED_SDK_OK, arli-law, qmllint, module size and git diff --check passed; /tmp/arli-wave32-ci.log. Targeted 7/7; actual queued daemon/worker alias/root replacement and legacy-worker rejection. Initial new-test missing JSON include fixed; GCC16 warning at temporary argv vector removed by named vector, final compilation has no corresponding warning.",
+    "wave32_live": "workspace-identity-qt-live-final.json: actual running Gemma through daemon/worker/offscreen Qt facade; model edit, daemon restart, current workspace switch, required confirmation and exact historical revert passed. Independent SQLite and manifest inspection verifies both tasks done, source task/turn binding and persistent identical workspace identity. Root-replacement refusal is covered separately by deterministic actual-process tests.",
+    "wave33_ci": "Final scripts/ci.sh: 57/57, SDK_DAEMON_ROUNDTRIP_OK, INSTALLED_SDK_OK, arli-law, qmllint, module size and git diff --check; /tmp/arli-wave33-ci-final.log. Targeted 5/5 and regressions 2/2. Initial full CI caught OpenDialog/GetTurnTrace parity regression (fixed by shared trace path) and random credential-prefix collision in unterminated job fixture (newline plus explicit conservative-prefix redaction test; production filter unchanged). Initial /tmp/arli-wave33-ci.log retained.",
+    "wave33_live": "durable-acceptance-qt-live-final.json: actual running Gemma through daemon/worker/offscreen Qt, file edit then restart/workspace switch/required approval/exact revert passed. SQLite both tasks done; independent SHA-256 and terminal-plan equality verifies durable criteria. One file criterion plus explicit unverifiable scope yields partial, not falsely fully verified. Pre-dispatch timing and crash recovery are proven separately by deterministic tests.",
+    "wave34_ci": "Final scripts/ci.sh: 58/58, SDK_DAEMON_ROUNDTRIP_OK, INSTALLED_SDK_OK, arli-law, qmllint, module size and git diff --check; /tmp/arli-wave34-ci-final.log. Targeted initial 4/4 and fixed 4/4. Actual shell/mocks prove failed/omitted check, revision invalidation, repair, denied-command no reprompt, reread pages/order and forced readonly no-create. Initial new-test SettingsRow/TurnConfig mismatch fixed. Initial full CI retained: remaining unterminated rotation fixtures collided with random credential prefixes; completed newline fixtures fixed, production redaction unchanged.",
+    "wave34_live": "procedural-acceptance-live-initial.json retained failure: no-create policy blocked explicit test script. Fixed via readonly shell, preserving approval/sandbox. procedural-acceptance-live-coverage-initial.json retained successful actions but overly strict eval status expectation. Final procedural-acceptance-live-final.json passed actual Gemma through daemon/worker/authenticated gRPC: 4 tools, 1 edit, 1 exact approval, successful fixture script, all three predicates, no tool errors. Independent directory/bytes checks prove unchanged script and no extra files; SQLite verifies done, read/edit/read/run_shell order, durable plan equality/SHA-256. Model verification_state partial retained for preservation requirements, not relabeled checks_passed.",
+    "wave35_ci": "scripts/ci.sh: 60/60, SDK_DAEMON_ROUNDTRIP_OK, INSTALLED_SDK_OK, arli-law, qmllint, module size and git diff --check; /tmp/arli-wave35-ci.log. 128 enqueue attempts over 16 independent SQLite connections admit exactly 64; bytes and snapshot limits checked. Actual daemon/worker/mock proves quota errors without new rows, queue-full dedup, 16 shared streams, Health/Cancel, release/restart, blocked-Write cancellation without task cancellation, and healthy 11-second model wait. Initial admission fixture race and client/server cancellation timing assumptions corrected; narrow-channel actual backpressure uses unchanged local credentials/message ceiling.",
+    "wave35_live": "task-admission-live-final.json: real running Gemma through daemon/worker/authenticated gRPC with admission/watchdog enabled; 4 tools, 1 edit, 1 exact approval, script success, no tool errors, unchanged script/no extra files. Independent SQLite verifies done, active count zero and read/edit/read/run_shell order; manifest plan/hash matches. Model partial retained honestly. Queue saturation and slow-reader behavior are deterministic real-process tests, not LLM stress claims.",
+    "wave36_ci": "scripts/ci.sh: 62/62, SDK_DAEMON_ROUNDTRIP_OK, INSTALLED_SDK_OK, arli-law, qmllint and module-size law passed; /tmp/arli-wave36-ci.log. Targeted 4/4. Actual daemon/worker/authenticated gRPC: all 425 messages exactly once across restart/new insertion, hidden context exclusion, legacy 200, auth, validation, byte budget and explicit oversized-item refusal. Qt: late-page fencing, retry/single-flight, legacy reply, QAbstractItemModelTester insert contract; QML button click/disabled/exhausted. git diff --check clean.",
+    "wave36_live": "message-pages-qt-live-final.json: actual running Gemma via daemon/worker/authenticated gRPC and offscreen Qt facade with paged OpenDialog. Exact requested file edit, daemon restart/current workspace change, historical journal discovery, mandatory confirmation and exact original-byte revert passed. Independent SQLite: both tasks done, four visible messages, history index present. Deep pagination is proven separately by deterministic 425-message real-process test, not claimed as LLM-generated history.",
+    "wave37_ci": "Targeted 7/7; /tmp/arli-wave37-ci.log full 64/64 on 0.5.2, then /tmp/arli-wave37-release-ci.log full 64/64 on final 0.5.3. SDK_DAEMON_ROUNDTRIP_OK, INSTALLED_SDK_OK, arli-law, qmllint, module size and git diff --check passed. Actual daemon/worker/gRPC: 1005 recency summaries across restart, cross-process rename/touch/insert/delete invalidation, auth/limits/legacy refusal. Qt: Unicode search beyond first page, stale search generation, append model contract, retry, explicit refresh and legacy-only fallback; QML continuation click checked.",
+    "wave37_live": "dialog-pages-qt-live-final.json: actual running Gemma through daemon/worker/authenticated gRPC and Qt facade using both new page APIs. Exact edit, restart/workspace switch, historical journal discovery, required approval and exact original restoration passed. Independent SQLite: both tasks done, schema 15, persistent revision and all three triggers. Large-list behavior is separately proved by deterministic 1005-dialog tests.",
+    "wave37_rpm": "rpm-0.5.3-wave37.json: /home/owned/arli-dist/wave37/arli-0.5.3-1.fc44.x86_64.rpm, SHA256 870db60a237e8378ff90902c21a0f9e845e3179962ecb53abef03c361da05aba. Full release CI and actual rpmbuild %check 64/64. Digest/payload/version and extracted packaged shell offscreen startup passed. rpm-0.5.3-live-final.json: actual extracted daemon/agent + Gemma + Qt facade edit, restart, workspace switch, mandatory approval and exact revert passed; independent SQLite both tasks done/schema 15. Source allowlist excludes developer state/cache/build trees. Existing Fedora warnings retained in log and classified in report; no warning-free claim. User requested pausing further waves after this artifact."
+  }
+}

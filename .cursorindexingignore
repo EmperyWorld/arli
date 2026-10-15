@@ -1,0 +1,14 @@
+# Поиск по кодовой базе пропускает сборочные деревья.
+# Файл отсюда можно открыть явно, если он нужен для разбора сборки.
+
+/build/
+/build-*/
+/out/
+.cache/
+compile_commands.json
+CMakeFiles/
+cmake-build-*/
+Testing/
+*.o
+*.a
+*.d

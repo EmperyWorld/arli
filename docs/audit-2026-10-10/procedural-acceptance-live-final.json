@@ -1,0 +1,44 @@
+{
+  "approvals": 1,
+  "changeset_id": "turn-6320ae86b1f97b74e96f5db4c63af2c4",
+  "checked_revision": 1,
+  "command_observed": true,
+  "model": "/models/gemma-4-26B.gguf",
+  "no_extra_files_verified": true,
+  "passed": true,
+  "plan": {
+    "checks": [
+      {
+        "end_line": 1,
+        "expected": "ready\n",
+        "kind": "file_equals",
+        "path": "result.txt",
+        "start_line": 1
+      },
+      {
+        "end_line": 0,
+        "expected": "sh ./verify.sh",
+        "kind": "command_succeeds",
+        "path": "",
+        "start_line": 0
+      },
+      {
+        "end_line": 0,
+        "expected": "",
+        "kind": "read_after_each_write",
+        "path": "result.txt",
+        "start_line": 0
+      }
+    ],
+    "unverifiable": "The requirement 'verify.sh не меняй' cannot be verified as I do not know its original state/content."
+  },
+  "script_preserved_verified": true,
+  "through_daemon": true,
+  "verification_state": "partial",
+  "workspace": "/tmp/arli-live-procedure-qAawqI",
+  "sqlite_task_done_verified": true,
+  "durable_plan_hash_verified": true,
+  "observation_order_verified": true,
+  "tools": 4,
+  "tool_errors": 0
+}

@@ -1,0 +1,15 @@
+{
+  "version": "0.4.4",
+  "regression": "17/17 CTest + laws + strict qmllint",
+  "copied_project_start": "3/3 real list_dir observations; read_only, cancelled after first observation",
+  "installed_service": {
+    "worker": "/home/owned/.local/lib/arli-hotfix/0.4.4/arli-agent",
+    "daemon": "/usr/bin/arli-daemon 0.4.3",
+    "tools_ok": 5,
+    "errors": 0,
+    "done": true,
+    "files_unchanged": true,
+    "temporary_chat_deleted": true
+  },
+  "hotfix_lifetime": "until the daemon is restarted; install RPM 0.4.4 for permanence"
+}

@@ -1,0 +1,22 @@
+{
+  "cases": [
+    {
+      "compactions": 0,
+      "disk_correct": true,
+      "errors": 0,
+      "name": "file_integrity",
+      "no_extra_files": true,
+      "passed": true,
+      "seconds": 26,
+      "tool_errors": 0,
+      "tools": 5,
+      "verification_plan": "{\"checks\":[{\"end_line\":1501,\"expected\":\"value=new\",\"kind\":\"file_contains\",\"path\":\"large.txt\",\"start_line\":1501},{\"end_line\":1501,\"expected\":\"value=old\",\"kind\":\"file_not_contains\",\"path\":\"large.txt\",\"start_line\":1501},{\"end_line\":1,\"expected\":\"ready\",\"kind\":\"file_equals\",\"path\":\"empty.txt\",\"start_line\":1}],\"unverifiable\":\"The exact content of line 1501 in large.txt (besides the replacement) and the preservation of all other bytes in the file cannot be verified without knowing the original content.\"}",
+      "verification_state": "partial",
+      "writes": 2
+    }
+  ],
+  "failed": 0,
+  "model": "/models/gemma-4-26B.gguf",
+  "workspace": "/tmp/arli-live-eval-2hwvi1",
+  "journal_disk_verified": true
+}

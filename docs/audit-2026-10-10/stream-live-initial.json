@@ -1,0 +1,15 @@
+{
+  "file_content": "",
+  "first_event_id": 1,
+  "grpc_ok": false,
+  "last_event_id": 15,
+  "model": "/models/gemma-4-26B.gguf",
+  "model_endpoint": "http://127.0.0.1:8080/v1",
+  "ordered_without_duplicates": true,
+  "passed": false,
+  "resumed_events": 14,
+  "task_id": 1,
+  "terminal_status": "",
+  "workspace": "/tmp/arli-live-resume-qF8g3W/workspace",
+  "interrupted_by_test_runner": "Scoped prohibition misclassified: other files must not be created blocks explicitly requested result.txt. Daemon stopped after model requested shell approval; no approval granted."
+}

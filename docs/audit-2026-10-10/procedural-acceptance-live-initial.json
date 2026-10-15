@@ -1,0 +1,10 @@
+{
+  "changeset_id": "turn-a4092b79bda5d6da624bac1f1db9debd",
+  "checked_revision": 0,
+  "error": "[json.exception.parse_error.101] parse error at line 1, column 1: attempting to parse an empty input; check that your input string or stream contains the expected JSON",
+  "model": "/models/gemma-4-26B.gguf",
+  "passed": false,
+  "through_daemon": true,
+  "verification_state": "",
+  "workspace": "/tmp/arli-live-procedure-FPviDY"
+}

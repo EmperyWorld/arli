@@ -1,0 +1,19 @@
+{
+  "changeset_id": "turn-288aa8e16ac57192ddaa3a5e7f10e1c1",
+  "model": "/models/gemma-4-26B.gguf",
+  "model_disk_verified": true,
+  "passed": true,
+  "revert_disk_verified": true,
+  "through_daemon": true,
+  "through_qt_facade": true,
+  "undo_journal_visible": true,
+  "workspace": "/tmp/arli-live-revert-ui-92wGhJ",
+  "workspace_changed_before_revert": true,
+  "sqlite_tasks_done_verified": true,
+  "acceptance_manifest_hash_verified": true,
+  "acceptance_matches_terminal_plan": true,
+  "acceptance_checks": 1,
+  "acceptance_unverifiable": true,
+  "verification_state": "partial",
+  "workspace_identity_persistence_verified": true
+}

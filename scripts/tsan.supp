@@ -1,0 +1,11 @@
+# Fedora's uninstrumented Abseil synchronization library reports races in its
+# internal deadlock-detection graph under TSan.  Keep the suppression scoped to
+# that third-party implementation; Arli stacks remain fully reported.
+race:absl::lts_20260107::synchronization_internal::GraphCycles
+
+# The distro gRPC core is likewise not TSan-instrumented. Reports whose raced
+# access itself is inside grpc_core cannot be attributed to Arli code.
+race:grpc_core::
+called_from_lib:libgrpc.so
+called_from_lib:libgpr.so
+race:absl::lts_20260107::

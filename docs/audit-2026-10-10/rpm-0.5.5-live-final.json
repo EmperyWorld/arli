@@ -1,0 +1,34 @@
+{
+  "date": "2026-10-14",
+  "version": "0.5.5",
+  "rpm": "/home/owned/arli-dist/arli-0.5.5-1.fc44.x86_64.rpm",
+  "nevra": "arli-0.5.5-1.fc44.x86_64",
+  "sha256": "c46a019448a1681056dc17260bb85c3cd46006f19ccf9b5f234ff8a49fcb5f1f",
+  "rpm_check": {"passed": 71, "failed": 0},
+  "extracted_runtime": {"versions_match": "0.5.5", "health": "serving", "slice": "M5.5"},
+  "worker_spawn": {
+    "method": "posix_spawn with explicit signal mask/defaults; rlimits applied in the fresh worker image",
+    "stress": {"task_admission": "5/5", "crash_revert_daemon": "5/5"},
+    "asan_ubsan_targeted": "2/2",
+    "tsan_targeted": "2/2"
+  },
+  "host_install": {
+    "performed": true,
+    "installed_nevra": "arli-0.5.5-1.fc44.x86_64",
+    "daemon": "active",
+    "doctor": "DOCTOR_OK",
+    "llm": "reachable at http://127.0.0.1:8080/v1/models"
+  },
+  "asan_ubsan": {"passed": 71, "failed": 0, "note": "70 in the full run; job-orphans rerun separately after sanitizer-only timeout adjustment"},
+  "tsan": {"passed": 70, "failed": 0, "excluded": ["shell-ui"], "note": "system Qt/QML crashes the Clang TSan runtime; shell-ui passed release and ASan"},
+  "qwen38_live": ["bugfix", "multi_file", "recovery", "file_integrity_revert"],
+  "payload_verified": [
+    "/usr/bin/arli-daemon",
+    "/usr/bin/arli-agent",
+    "/usr/bin/arli-shell",
+    "/usr/lib64/libarli_embed.a",
+    "/usr/lib64/libarli_grpc_tools.a",
+    "/usr/share/arli/proto/arli.proto",
+    "/usr/lib/systemd/user/arli-daemon.service"
+  ]
+}

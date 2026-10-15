@@ -1,0 +1,626 @@
+syntax = "proto3";
+
+package arli.v1;
+
+// UI ↔ Orchestrator on 127.0.0.1:4792. Worker connects via AgentHub.Session.
+
+service Agent {
+  rpc Health(HealthRequest) returns (HealthReply);
+  rpc ListDialogs(ListDialogsRequest) returns (ListDialogsReply);
+  rpc ListDialogPage(ListDialogPageRequest) returns (ListDialogPageReply);
+  rpc CreateDialog(CreateDialogRequest) returns (Dialog);
+  rpc SetDialogInstructions(SetDialogInstructionsRequest) returns (Dialog);
+  rpc RenameDialog(RenameDialogRequest) returns (Dialog);
+  rpc DeleteDialog(DeleteDialogRequest) returns (DeleteDialogReply);
+  rpc OpenDialog(OpenDialogRequest) returns (OpenDialogReply);
+  rpc ListMessages(ListMessagesRequest) returns (ListMessagesReply);
+  rpc RevertChangeset(RevertChangesetRequest) returns (stream TurnEvent);
+  rpc Send(SendRequest) returns (stream TurnEvent);
+  rpc Cancel(CancelRequest) returns (CancelReply);
+  rpc AnswerAskUser(AnswerAskUserRequest) returns (AnswerAskUserReply);
+  rpc ConfirmDanger(ConfirmDangerRequest) returns (ConfirmDangerReply);
+  rpc GetSettings(GetSettingsRequest) returns (Settings);
+  rpc SetSettings(Settings) returns (Settings);
+  // Kill the worker now (no cancel grace) and respawn; active task → cancelled.
+  rpc HardStop(HardStopRequest) returns (HardStopReply);
+  rpc ListTasks(ListTasksRequest) returns (ListTasksReply);
+  // Persistent trace of any past turn (from `steps`).
+  rpc GetTurnTrace(GetTurnTraceRequest) returns (GetTurnTraceReply);
+  // Re-attach to the active turn of a dialog: recorded steps first, then live events until Done.
+  rpc AttachTurn(AttachTurnRequest) returns (stream TurnEvent);
+  rpc ListJobs(ListJobsRequest) returns (ListJobsReply);
+  rpc StopJob(StopJobRequest) returns (StopJobReply);
+  rpc WatchJobLog(WatchJobLogRequest) returns (stream JobLogChunk);
+  rpc GetFilePass(GetFilePassRequest) returns (GetFilePassReply);
+  rpc ClearFilePass(ClearFilePassRequest) returns (ClearFilePassReply);
+  rpc GetPlan(GetPlanRequest) returns (GetPlanReply);
+  rpc ClearPlan(ClearPlanRequest) returns (ClearPlanReply);
+}
+
+// Orchestrator ↔ Agent worker (bi-directional).
+service AgentHub {
+  rpc Session(stream WorkerToOrch) returns (stream OrchToWorker);
+}
+
+message HealthRequest {}
+
+message HealthReply {
+  bool serving = 1;
+  string slice = 2;
+  string version = 3;
+  // none | starting | idle | busy
+  string worker_state = 4;
+  int32 worker_pid = 5;
+  int32 queue_depth = 6;
+  // GET {llm_base_url}/models succeeded with current settings (best effort).
+  bool llm_reachable = 7;
+  bool event_resume_supported = 8;
+}
+
+message HardStopRequest {
+  int64 dialog_id = 1;
+}
+
+message HardStopReply {
+  bool ok = 1;
+  string detail = 2;
+}
+
+message ListTasksRequest {
+  int64 dialog_id = 1;  // 0 → all
+  int32 limit = 2;      // 0 → 50
+}
+
+message TaskInfo {
+  int64 id = 1;
+  int64 dialog_id = 2;
+  int64 turn_id = 3;
+  string status = 4;  // queued|running|done|failed|cancelled
+  string worker_id = 5;
+  string error = 6;
+  string created_at = 7;
+  string updated_at = 8;
+  string finished_at = 9;
+}
+
+message ListTasksReply {
+  repeated TaskInfo tasks = 1;
+}
+
+message ListDialogsRequest {}
+
+message ListDialogsReply {
+  repeated Dialog dialogs = 1;
+}
+message ListDialogPageRequest {
+  string page_token = 1; // Opaque continuation; empty starts a fresh listing.
+  int32 page_size = 2; // 0 = 50, otherwise 1..100.
+}
+message ListDialogPageReply {
+  // Recency order (updated_at DESC, id DESC); summary omits instructions.
+  repeated Dialog dialogs = 1;
+  string next_page_token = 2;
+  // Any list mutation invalidates continuation with ABORTED; restart from page 1.
+}
+
+message CreateDialogRequest {
+  string title = 1;
+}
+
+message RenameDialogRequest {
+  int64 dialog_id = 1;
+  string title = 2;
+}
+
+message SetDialogInstructionsRequest {
+  int64 dialog_id = 1;
+  string instructions = 2; // Complete replacement; empty clears. Maximum 16 KiB UTF-8.
+}
+
+message DeleteDialogRequest {
+  int64 dialog_id = 1;
+}
+
+message DeleteDialogReply {
+  bool ok = 1;
+}
+
+message Dialog {
+  string instructions = 4;
+  int64 id = 1;
+  string title = 2;
+  string updated_at = 3;
+}
+
+message OpenDialogRequest {
+  int64 dialog_id = 1;
+  // Opt in to bounded pages; zero preserves the legacy latest-200 response.
+  int32 message_page_size = 2;
+}
+
+message ListMessagesRequest {
+  int64 dialog_id = 1;
+  // Exclusive immutable message ID, 0 starts at the newest message.
+  int64 before_id = 2;
+  int32 page_size = 3; // 0 = 50, otherwise 1..100; byte budget may shorten a page.
+}
+message ListMessagesReply {
+  // Ascending IDs within each page; subsequent pages contain older messages.
+  repeated ChatMessage messages = 1;
+  int64 next_before_id = 2; // 0 means exhausted. New inserts cannot shift older pages.
+}
+
+message ChatMessage {
+  int64 id = 1;
+  string role = 2;
+  string text = 3;
+  string created_at = 4;
+  int64 turn_id = 5;
+}
+
+// One recorded step of a turn (row of `steps`).
+// kind: thought | token | action | observation | confirm | ask_user | status | error | done
+message TraceItem {
+  string kind = 1;
+  string text = 2;         // thought/token/status text, observation output, error message, done text
+  string tool = 3;
+  string detail_json = 4;  // kind-specific extras (confirm: token/command/consequence; ask_user: question/options)
+  int64 step_id = 5;
+  bool ok = 6;
+  int64 duration_ms = 7;
+  string created_at = 8;
+  string args_json = 9;
+  int64 turn_id = 10;
+  string diff = 11;  // observation: unified file diff for Inspector
+  int64 row_id = 12; // Stable SQLite cursor; zero for synthesized recovery items.
+}
+
+message OpenDialogReply {
+  Dialog dialog = 1;
+  repeated ChatMessage messages = 2;
+  repeated TraceItem last_trace = 3;  // steps of the last turn
+  int64 next_before_id = 4;
+  int64 last_trace_next_after_id = 5;
+}
+
+message GetTurnTraceRequest {
+  int64 dialog_id = 1;
+  int64 turn_id = 2;  // 0 → last turn
+  int64 after_id = 3; // Exclusive stable TraceItem.row_id cursor.
+  int32 page_size = 4; // 0 = 50, otherwise 1..100.
+}
+
+message GetTurnTraceReply {
+  int64 turn_id = 1;
+  repeated TraceItem items = 2;
+  int64 next_after_id = 3; // Zero means the trace is exhausted.
+}
+
+message AttachTurnRequest {
+  int64 dialog_id = 1;
+  int64 task_id = 2; // Zero: legacy active task lookup.
+  int64 after_event_id = 3;
+}
+
+message RevertChangesetRequest {
+  int64 source_turn_id = 5; // Optional historical workspace/ownership binding.
+  int64 dialog_id = 1;
+  string changeset_id = 2;
+  string request_id = 3;
+  int64 after_event_id = 4;
+}
+
+message SendRequest {
+  int64 dialog_id = 1;
+  string text = 2;
+  string request_id = 3; // Optional, unique within dialog; retry must retain text.
+  int64 after_event_id = 4;
+}
+
+message TurnEvent {
+  int64 dialog_id = 1;
+  int64 turn_id = 2;
+  int64 task_id = 17;
+  int64 event_id = 18; // Durable monotonic database event ID.
+  bool interaction_active = 19; // Delivery-time hint; obsolete prompts remain historical.
+  oneof payload {
+    Thought thought = 3;
+    Token token = 4;
+    Action action = 5;
+    Observation observation = 6;
+    AskUser ask_user = 7;
+    Status status = 8;
+    ErrorMsg error = 9;
+    Done done = 10;
+    ConfirmNeeded confirm_needed = 11;
+    Queued queued = 12;
+    ContextUse context_use = 13;
+    FilePassSnapshot file_pass = 14;
+    PlanSnapshot plan = 15;
+    MemorySnapshot memory = 16;
+  }
+}
+
+// Active file queue for a dialog (orchestrator persists; worker emits snapshots).
+message FilePassSnapshot {
+  repeated string paths = 1;
+  repeated string done = 2;
+  // Head was read but not written yet — UI hint; not stored in SQLite.
+  bool hold_for_write = 3;
+  // Reviewed without a file mutation; kept separate from done (written).
+  repeated string reviewed = 4;
+}
+
+message GetFilePassRequest {
+  int64 dialog_id = 1;
+}
+
+message GetFilePassReply {
+  repeated string paths = 1;
+  repeated string done = 2;
+  repeated string reviewed = 3;
+}
+
+message ClearFilePassRequest {
+  int64 dialog_id = 1;
+}
+
+message ClearFilePassReply {
+  bool ok = 1;
+}
+
+message GetPlanRequest {
+  int64 dialog_id = 1;
+}
+
+message GetPlanReply {
+  repeated string steps = 1;
+  int32 current = 2;
+  bool current_failed = 3;
+}
+
+message ClearPlanRequest {
+  int64 dialog_id = 1;
+}
+
+message ClearPlanReply {
+  bool ok = 1;
+}
+
+message PlanSnapshot {
+  repeated string steps = 1;
+  int32 current = 2;
+  bool current_failed = 3;
+}
+
+message MemoryEntry {
+  int64 id = 1;
+  string text = 2;
+}
+
+message MemorySnapshot {
+  repeated MemoryEntry entries = 1;
+}
+
+// How full the model window is. Emitted before each model call.
+message ContextUse {
+  bool provider_reported = 4; // false = local estimate, including for legacy senders
+  int32 reserved_output_tokens = 5;
+  int32 completion_tokens = 6;
+  int32 used_tokens = 1;
+  int32 window_tokens = 2;
+  bool compressed = 3;
+}
+
+// Task waits for the single worker; position 1 = next.
+message Queued {
+  int32 position = 1;
+}
+
+message Thought {
+  string text = 1;
+}
+
+message Token {
+  string text = 1;
+}
+
+message Action {
+  string tool = 1;
+  string args_json = 2;
+  int64 step_id = 3;
+}
+
+message Observation {
+  string tool = 1;
+  string args_json = 2;
+  bool ok = 3;
+  string output = 4;
+  int64 step_id = 5;
+  string diff = 6;
+  int64 duration_ms = 7;
+}
+
+message AskUser {
+  string question = 1;
+  repeated string options = 2;
+  string question_id = 3;
+}
+
+message ConfirmNeeded {
+  string confirm_token = 1;
+  string command = 2;
+  string consequence = 3;
+}
+
+message Status {
+  string text = 1;
+}
+
+message ErrorMsg {
+  string message = 1;
+}
+
+message EditStats {
+  int32 lines_added = 1;
+  int32 lines_removed = 2;
+  int32 files_touched = 3;
+}
+
+message Done {
+  string changeset_id = 9; // Durable worker mutation journal, empty for read-only/legacy turns.
+  int64 message_id = 1;
+  string assistant_text = 2;
+  EditStats edit_stats = 3;
+  // Empty means legacy success. New workers always supply a terminal outcome.
+  string outcome = 4; // done | failed | cancelled
+  string error_code = 5;
+  string verification_state = 6; // checks_passed | partial | unverified | failed
+  int64 checked_revision = 7;
+  string verification_plan_json = 8;
+}
+
+message CancelRequest {
+  int64 dialog_id = 1;
+}
+
+message CancelReply {
+  bool ok = 1;
+}
+
+message AnswerAskUserRequest {
+  int64 dialog_id = 1;
+  string answer = 2;
+  string question_id = 3;
+}
+
+message AnswerAskUserReply {
+  bool ok = 1; // queued by relay; worker acceptance arrives in the task stream
+  int64 command_id = 2;
+}
+
+message ConfirmDangerRequest {
+  int64 dialog_id = 1;
+  string confirm_token = 2;
+  bool accept = 3;
+}
+
+message ConfirmDangerReply {
+  int64 command_id = 3;
+  bool ok = 1;
+  string detail = 2;
+}
+
+message GetSettingsRequest {}
+
+message Settings {
+  string llm_base_url = 1;
+  string llm_model = 2;
+  // Write-only: never returned by GetSettings/SetSettings. Empty on SetSettings = unchanged.
+  string llm_api_key = 3;
+  string workdir = 4;
+  // Read-only: whether a key is stored.
+  bool has_api_key = 5;
+  // SetSettings only: drop the stored key.
+  bool clear_api_key = 6;
+  // Lifecycle (seconds; 0 on SetSettings = keep default).
+  int32 turn_timeout_sec = 7;   // whole turn, default 2700
+  int32 idle_timeout_sec = 8;   // no events from worker, default 600
+  int32 cancel_grace_sec = 9;   // Cancel → SIGTERM, default 10
+  // One token-prefix per line. shell_auto empty = ask every command.
+  // shell_ask overrides shell_auto (git push still asks if git is allowed).
+  string shell_auto = 10;
+  string shell_ask = 11;
+  bool shell_allow_all = 12;
+  // True: rm / rmdir / unlink / find -delete / git clean always ask.
+  bool delete_confirm = 13;
+  // One directory name per line. Empty = node_modules, .git, dist, and the built-in set.
+  string list_ignore = 14;
+  // Model context window, tokens. 0 on SetSettings = keep the stored value.
+  int32 context_tokens = 15;
+  // Tool rounds in one turn. 0 on SetSettings = keep the stored value.
+  int32 max_steps = 16;
+  // gemma4 | qwen3 | generic. Empty on SetSettings = keep stored.
+  string llm_profile = 17;
+  // Read-only after SetSettings: model id appears in GET /models (when reachable).
+  bool llm_model_listed = 18;
+  int32 shell_timeout_sec = 19;  // default 120; 0 on SetSettings = keep
+  bool shell_net = 20;
+  bool read_only = 21;
+  bool allow_unsandboxed_shell = 22;
+  // Absent on SetSettings: unchanged. -1: profile default; 0..2: explicit sampling.
+  optional double llm_temperature = 23;
+}
+
+message ListJobsRequest {
+  bool include_finished = 1;
+  int64 dialog_id = 2; // Zero retains the global list, including legacy unowned jobs.
+  int64 task_id = 3;
+}
+
+message JobInfo {
+  int64 id = 1;
+  int32 pid = 2;
+  string command = 3;
+  string workdir = 4;
+  string status = 5;
+  string started_at = 6;
+  string log_tail = 7;
+  int32 exit_code = 8;
+  bool exit_code_known = 9;
+  int64 dialog_id = 10;
+  int64 task_id = 11;
+  int64 turn_id = 12;
+  string finished_at = 13;
+}
+
+message ListJobsReply {
+  repeated JobInfo jobs = 1;
+}
+
+message StopJobRequest {
+  int64 id = 1;
+  int64 expected_dialog_id = 2; // Optional consistency checks; zero preserves legacy behavior.
+  int64 expected_task_id = 3;
+}
+
+message StopJobReply {
+  bool ok = 1;
+  string detail = 2;
+}
+
+// ----- AgentHub -----
+
+message Hello {
+  bool claim_ack_supported = 3;
+  bool interaction_ack_supported = 4;
+  bool dialog_instructions_supported = 5;
+  bool mutation_revert_supported = 6;
+  bool mutation_catalog_supported = 7;
+  bool workspace_identity_supported = 8;
+  string worker_id = 1;
+  int32 pid = 2;
+}
+
+message ClaimTask {
+  optional double llm_temperature = 26; // Absent/-1: historical profile default; zero is explicit.
+  string workspace_identity_json = 25;
+  int64 revert_source_task_id = 23;
+  int64 revert_source_turn_id = 24;
+  string revert_changeset_id = 22; // Nonempty: deterministic worker operation, no LLM.
+  string dialog_instructions = 21; // Immutable task snapshot.
+  int64 task_id = 1;
+  int64 dialog_id = 2;
+  int64 turn_id = 3;
+  string user_text = 4;
+  string workdir = 5;
+  string llm_base_url = 6;
+  string llm_model = 7;
+  string llm_api_key = 8;
+  string shell_auto = 9;
+  string shell_ask = 10;
+  bool shell_allow_all = 11;
+  bool delete_confirm = 12;
+  string list_ignore = 13;
+  int32 context_tokens = 14;
+  int32 max_steps = 15;
+  string llm_profile = 16;
+  int32 shell_timeout_sec = 17;
+  bool shell_net = 18;
+  bool read_only = 19;
+  bool allow_unsandboxed_shell = 20;
+}
+
+message CancelTask {
+  int64 task_id = 1;
+  int64 dialog_id = 2;
+}
+
+message ConfirmResult {
+  int64 dialog_id = 1;
+  string confirm_token = 2;
+  bool accept = 3;
+}
+
+message AskUserAnswer {
+  int64 dialog_id = 1;
+  string answer = 2;
+  string question_id = 3;
+}
+
+// Orchestrator asks the worker to exit after the current turn (or now if idle).
+message Shutdown {}
+
+message OrchToWorker {
+  int64 command_id = 6; // Nonzero for acknowledged Claim deliveries.
+  oneof payload {
+    ClaimTask claim = 1;
+    CancelTask cancel = 2;
+    ConfirmResult confirm_result = 3;
+    Shutdown shutdown = 4;
+    AskUserAnswer ask_user_answer = 5;
+  }
+}
+
+// Liveness while a turn runs (orchestrator → touch_task).
+message Heartbeat {}
+
+// Worker could not take the claim (already busy); orchestrator re-queues the task.
+message ClaimRejected {
+  string reason = 1;
+}
+
+// Terminal failure of the task without Done (exception, invalid claim).
+message TaskFailed {
+  string message = 1;
+}
+
+message CommandAck {
+  int64 command_id = 1;
+  bool accepted = 2; // Accepted for execution, not proof of completed side effects.
+}
+
+message WorkerToOrch {
+  int64 task_id = 1;
+  int64 dialog_id = 2;
+  int64 turn_id = 3;
+  oneof payload {
+    Hello hello = 4;
+    Thought thought = 5;
+    Token token = 6;
+    Action action = 7;
+    Observation observation = 8;
+    AskUser ask_user = 9;
+    Status status = 10;
+    ErrorMsg error = 11;
+    Done done = 12;
+    ConfirmNeeded confirm_needed = 13;
+    Heartbeat heartbeat = 14;
+    ClaimRejected claim_rejected = 15;
+    TaskFailed task_failed = 16;
+    FilePassSnapshot file_pass = 17;
+    ContextUse context_use = 18;
+    PlanSnapshot plan = 19;
+    MemorySnapshot memory = 20;
+    CommandAck command_ack = 21;
+  }
+}
+
+// Opaque position names one retained generation and a byte offset. Empty starts at
+// the oldest retained data. Clients persist next_position only after consuming a chunk.
+message WatchJobLogRequest {
+  int64 id = 1;
+  string after_position = 2;
+  int64 expected_dialog_id = 3;
+  int64 expected_task_id = 4;
+}
+message JobLogChunk {
+  int64 id = 1;
+  string text = 2;
+  string next_position = 3;
+  bool gap = 4; // Requested bytes were already rotated away; resume at oldest retained data.
+  bool terminal = 5;
+  string status = 6;
+  int32 exit_code = 7;
+  bool exit_code_known = 8;
+}

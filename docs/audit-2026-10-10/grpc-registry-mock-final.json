@@ -1,0 +1,12 @@
+{
+  "approved": 1,
+  "denied": 1,
+  "mocked": true,
+  "model": "grpc_provider_write",
+  "passed": true,
+  "rpc_observations": 1,
+  "secret_leak": false,
+  "service_writes": 1,
+  "through_daemon": true,
+  "workspace": "/tmp/arli-registry-daemon-BiXf3H"
+}

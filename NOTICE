@@ -1,0 +1,11 @@
+Arli · Empery World
+
+Copyright (c) 2026 Кундухов Артём Георгиевич (po&T)
+Copyright (c) 2026 Кундухова Татьяна Александровна (TZBrand)
+SPDX-License-Identifier: MIT
+
+First-party code defaults to MIT unless a file or component states otherwise.
+The full permission and warranty terms are in LICENSE.
+Third-party code, including third_party/nlohmann/json.hpp and its embedded
+notices, retains its upstream licenses. Dependencies retain their own terms.
+Previously distributed versions retain the licenses delivered with them.

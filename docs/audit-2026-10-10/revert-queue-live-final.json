@@ -1,0 +1,39 @@
+{
+  "cases": [
+    {
+      "compactions": 0,
+      "disk_correct": true,
+      "errors": 0,
+      "name": "file_integrity",
+      "no_extra_files": true,
+      "passed": true,
+      "seconds": 27,
+      "tool_errors": 0,
+      "tools": 6,
+      "verification_plan": "{\"checks\":[{\"end_line\":1501,\"expected\":\"value=new\",\"kind\":\"line_range\",\"path\":\"large.txt\",\"start_line\":1501},{\"end_line\":0,\"expected\":\"ready\",\"kind\":\"file_equals\",\"path\":\"empty.txt\",\"start_line\":0}],\"unverifiable\":\"Verification that all other bytes in large.txt are preserved (requires original state). Verification that line 1501 is exactly 'value=new' versus merely containing it (the prompt is slightly ambiguous: 'replace line 1501 value=old with value=new' could mean replacing the whole line or a substring within it). Requirement to re-read the file after each edit is not verifiable by final content.\"}",
+      "verification_state": "partial",
+      "writes": 2
+    }
+  ],
+  "failed": 0,
+  "model": "/models/gemma-4-26B.gguf",
+  "revert": {
+    "complete": true,
+    "files": [
+      {
+        "error": "",
+        "outcome": "reverted",
+        "path": "empty.txt"
+      },
+      {
+        "error": "",
+        "outcome": "reverted",
+        "path": "large.txt"
+      }
+    ],
+    "journal": "turn-e3295593e98d6144d35fd48267c35fc2",
+    "source": "turn-877b4fff6e09d2c02f6778c3ffd8c3a0"
+  },
+  "revert_verified": true,
+  "workspace": "/tmp/arli-live-eval-qqXQWA"
+}
